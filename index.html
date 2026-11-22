@@ -147,24 +147,108 @@
       padding-right: var(--safe-right);
     }
 
-    /* Short Landscape Phone Adaptation (e.g., 844x390 / 932x430) */
-    @media (max-height: 460px) and (orientation: landscape) {
+    /* Short Landscape Phone Adaptation (e.g., iPhone Safari / Android Chrome Landscape) */
+    @media (max-height: 540px) and (orientation: landscape) {
       #topHud {
-        padding-top: 2px;
-        padding-bottom: 2px;
+        padding: 3px 8px !important;
+      }
+      #p1AvatarBox, #p2AvatarBox {
+        width: 28px !important;
+        height: 28px !important;
+      }
+      #p1SubBar, #p2SubBar {
+        display: none !important;
+      }
+      #battleStageTitle {
+        font-size: 9px !important;
+      }
+      #windIndicator {
+        font-size: 9px !important;
+        margin-top: 0 !important;
+      }
+      #topHud .mt-1 {
+        margin-top: 1px !important;
       }
       #bottomHud {
-        padding-top: 3px;
-        padding-bottom: 3px;
+        padding: 3px 8px !important;
+      }
+      #bottomHud > div {
+        flex-direction: row !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: 6px !important;
+      }
+      #bottomHud > div > div:first-child {
+        flex: 1.45 !important;
+        max-width: none !important;
+        gap: 4px !important;
+      }
+      #bottomHud > div > div:last-child {
+        flex: 1 !important;
+        gap: 4px !important;
       }
       .weapon-btn, #btnSkill1, #btnSkill2 {
-        min-height: 34px !important;
-        padding-top: 3px !important;
-        padding-bottom: 3px !important;
+        min-height: 32px !important;
+        padding: 2px 5px !important;
+      }
+      .weapon-btn span:first-child, #btnSkill1 span:first-child, #btnSkill2 span:first-child {
+        font-size: 9px !important;
+      }
+      .weapon-btn span:last-child, #btnSkill1 span:last-child, #btnSkill2 span:last-child {
+        font-size: 8px !important;
+      }
+      #hudTreasuryLabel {
+        display: none !important;
+      }
+      #goldAmountText {
+        font-size: 14px !important;
+      }
+      #goldAmountText::before {
+        content: '🪙 ';
+        font-size: 11px;
+      }
+      #turnStatusBadge {
+        top: 4px !important;
+        left: 8px !important;
+      }
+      #turnPill {
+        padding: 2px 8px !important;
+      }
+      #turnLabel {
+        font-size: 10px !important;
       }
       #precisionControls {
-        transform: scale(0.86);
-        transform-origin: bottom left;
+        bottom: 4px !important;
+        left: 50% !important;
+        transform: translateX(-50%) scale(0.84) !important;
+        transform-origin: bottom center !important;
+        padding: 3px 6px !important;
+      }
+      #touchHintPill {
+        display: none !important;
+      }
+      #storyClashModal > div,
+      #campaignModal > div,
+      #setupMatchModal > div,
+      #onlineModal > div,
+      #resultModal > div,
+      #objectiveModal > div {
+        max-height: 94dvh !important;
+        overflow-y: auto !important;
+      }
+      #storyClashModal .p-4,
+      #campaignModal .p-4,
+      #setupMatchModal .p-4,
+      #onlineModal .p-4 {
+        padding: 10px 14px !important;
+      }
+      #storyLeftSpeech, #storyRightSpeech {
+        min-h: 44px !important;
+        padding: 6px 8px !important;
+        font-size: 11px !important;
+      }
+      #campaignMapBoard {
+        height: 185px !important;
       }
     }
 
@@ -2420,6 +2504,32 @@
             return;
           }
 
+          // Instant Repair: immediately restores castle HP & blocks and passes turn to opponent
+          if (weaponId === 'repair') {
+            p.gold -= cost;
+            p.activeSkillAmmo = null;
+            p.selectedWeapon = 'stone';
+            this._healCastle(p.side, 22);
+            sound.playFanfare('repair');
+
+            if (this.mode === 'online' && !onlineMgr.isDemo) {
+              onlineMgr.postEvent({
+                type: 'SHOT',
+                turn: this.turnCount,
+                playerId: onlineMgr.playerId,
+                weapon: 'repair',
+                angle: p.angle,
+                power: p.power,
+                wind: this.wind
+              });
+            }
+
+            onBattleStateUpdated();
+            this.phase = 'turn_transition';
+            this.phaseTimer = 0.85;
+            return;
+          }
+
           p.selectedWeapon = weaponId;
           p.activeSkillAmmo = null;
           onBattleStateUpdated();
@@ -3339,19 +3449,24 @@
           }
 
           ctx.save();
+          const aspect = this.canvas.width / this.canvas.height;
+          // On wide landscape mobile viewports, crop excess upper sky so both castles fill the screen cleanly
+          const skyCrop = aspect > 2.3 ? Math.min(225, (aspect - 2.3) * 115) : 0;
+          const effectiveH = this.H - skyCrop;
+
           const scaleX = this.canvas.width / this.W;
-          const scaleY = this.canvas.height / this.H;
+          const scaleY = this.canvas.height / effectiveH;
           const scale = Math.min(scaleX, scaleY);
           const offsetX = (this.canvas.width - this.W * scale) / 2;
-          const offsetY = (this.canvas.height - this.H * scale) / 2;
+          const offsetY = (this.canvas.height - effectiveH * scale) / 2 - skyCrop * scale;
 
-          ctx.fillStyle = '#6b4b32';
+          ctx.fillStyle = '#5a3d28';
           ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
           ctx.translate(offsetX, offsetY);
           ctx.scale(scale, scale);
 
-          // Extend sky and ground cleanly beyond 1440px when aspect ratio is wide on landscape phones
+          // Extend sky and ground cleanly beyond 1680px when aspect ratio is wide on landscape phones
           const extraLeft = offsetX / scale;
           const extraRight = (this.canvas.width - (offsetX + this.W * scale)) / scale;
           if (extraLeft > 0 || extraRight > 0) {
@@ -3360,16 +3475,16 @@
             extGrad.addColorStop(0.55, '#8ca4b5');
             extGrad.addColorStop(1, '#dfc9a4');
             ctx.fillStyle = extGrad;
-            if (extraLeft > 0) ctx.fillRect(-extraLeft - 20, -200, extraLeft + 30, this.groundY + 200);
-            if (extraRight > 0) ctx.fillRect(this.W - 10, -200, extraRight + 30, this.groundY + 200);
+            if (extraLeft > 0) ctx.fillRect(-extraLeft - 20, -250, extraLeft + 30, this.groundY + 250);
+            if (extraRight > 0) ctx.fillRect(this.W - 10, -250, extraRight + 30, this.groundY + 250);
 
             ctx.fillStyle = this.skyTheme === 'desert' ? '#c2a366' : '#539434';
             if (extraLeft > 0) ctx.fillRect(-extraLeft - 20, this.groundY, extraLeft + 30, 11);
             if (extraRight > 0) ctx.fillRect(this.W - 10, this.groundY, extraRight + 30, 11);
 
-            ctx.fillStyle = '#68482f';
-            if (extraLeft > 0) ctx.fillRect(-extraLeft - 20, this.groundY + 11, extraLeft + 30, 240);
-            if (extraRight > 0) ctx.fillRect(this.W - 10, this.groundY + 11, extraRight + 30, 240);
+            ctx.fillStyle = '#5a3d28';
+            if (extraLeft > 0) ctx.fillRect(-extraLeft - 20, this.groundY + 11, extraLeft + 30, 260);
+            if (extraRight > 0) ctx.fillRect(this.W - 10, this.groundY + 11, extraRight + 30, 260);
           }
 
           if (this.shakeTime > 0) {
@@ -3546,20 +3661,23 @@
 
             const castleStartX = side === 0 ? 110 : this.W - 110 - 6 * 36;
             const castleCenterX = castleStartX + 108;
-            const depthX = side === 0 ? 15 : -15;
-            const depthY = -10;
+            const depthX = side === 0 ? 16 : -16;
+            const depthY = -11;
 
-            // Grand shadow under the citadel
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.42)';
+            // Ground ambient occlusion shadow beneath citadel
+            const shadowGrad = ctx.createRadialGradient(castleCenterX + depthX * 0.4, this.groundY + 4, 20, castleCenterX + depthX * 0.4, this.groundY + 4, 165);
+            shadowGrad.addColorStop(0, 'rgba(0, 0, 0, 0.55)');
+            shadowGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+            ctx.fillStyle = shadowGrad;
             ctx.beginPath();
-            ctx.ellipse(castleCenterX + depthX * 0.5, this.groundY + 5, 152, 13, 0, 0, Math.PI * 2);
+            ctx.ellipse(castleCenterX + depthX * 0.4, this.groundY + 5, 165, 15, 0, 0, Math.PI * 2);
             ctx.fill();
 
-            // Kingdom-specific grand foundation terrace & flanking corner buttresses
-            const plinthX = castleStartX - 10;
-            const plinthW = 6 * 36 + 20;
-            const plinthY = this.groundY - 8;
-            const plinthH = 9;
+            // Multi-tiered Realistic Stone Foundation Plinth & Sloped Talus Buttresses
+            const plinthX = castleStartX - 14;
+            const plinthW = 6 * 36 + 28;
+            const plinthY = this.groundY - 11;
+            const plinthH = 12;
 
             ctx.fillStyle = '#64748b';
             ctx.beginPath();
@@ -3581,24 +3699,53 @@
             ctx.fill();
 
             const plinthGrad = ctx.createLinearGradient(plinthX, plinthY, plinthX, plinthY + plinthH);
-            plinthGrad.addColorStop(0, '#475569');
+            plinthGrad.addColorStop(0, '#64748b');
+            plinthGrad.addColorStop(0.5, '#475569');
             plinthGrad.addColorStop(1, '#1e293b');
             ctx.fillStyle = plinthGrad;
             ctx.fillRect(plinthX, plinthY, plinthW, plinthH);
-            ctx.strokeStyle = k.secondaryColor;
-            ctx.lineWidth = 1.2;
-            ctx.strokeRect(plinthX, plinthY, plinthW, plinthH);
 
-            // Mongol defensive wooden palisade stakes in front of the terrace
+            // Plinth ashlar stone joints & moss weathering at base
+            ctx.strokeStyle = '#0f172a';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(plinthX, plinthY, plinthW, plinthH);
+            for (let sx = plinthX + 18; sx < plinthX + plinthW; sx += 18) {
+              ctx.beginPath();
+              ctx.moveTo(sx, plinthY);
+              ctx.lineTo(sx, plinthY + plinthH);
+              ctx.stroke();
+            }
+            ctx.fillStyle = 'rgba(34, 84, 38, 0.45)';
+            ctx.fillRect(plinthX, this.groundY - 3, plinthW, 3);
+
+            // Sloped defensive stone talus buttresses on left & right ends
+            ctx.fillStyle = '#334155';
+            ctx.beginPath();
+            ctx.moveTo(plinthX, plinthY);
+            ctx.lineTo(plinthX - 10, this.groundY + 1);
+            ctx.lineTo(plinthX, this.groundY + 1);
+            ctx.closePath();
+            ctx.fill();
+            ctx.beginPath();
+            ctx.moveTo(plinthX + plinthW, plinthY);
+            ctx.lineTo(plinthX + plinthW + 10, this.groundY + 1);
+            ctx.lineTo(plinthX + plinthW, this.groundY + 1);
+            ctx.closePath();
+            ctx.fill();
+
+            // Mongol spiked wooden palisade stakes
             if (k.id === 'mogol') {
-              const stakeStart = side === 0 ? plinthX + plinthW + 2 : plinthX - 22;
-              for (let s = 0; s < 4; s++) {
+              const stakeStart = side === 0 ? plinthX + plinthW + 4 : plinthX - 26;
+              for (let s = 0; s < 5; s++) {
                 const sx = stakeStart + s * 5;
-                ctx.strokeStyle = '#78350f';
-                ctx.lineWidth = 2.5;
+                ctx.strokeStyle = '#451a03';
+                ctx.lineWidth = 3;
                 ctx.beginPath();
-                ctx.moveTo(sx, this.groundY);
-                ctx.lineTo(sx + (side === 0 ? 7 : -7), this.groundY - 18 - (s % 2) * 4);
+                ctx.moveTo(sx, this.groundY + 1);
+                ctx.lineTo(sx + (side === 0 ? 8 : -8), this.groundY - 21 - (s % 2) * 5);
+                ctx.stroke();
+                ctx.strokeStyle = '#92400e';
+                ctx.lineWidth = 1.2;
                 ctx.stroke();
               }
             }
@@ -3609,7 +3756,7 @@
               ctx.fillStyle = 'rgba(56, 189, 248, 0.14)';
               ctx.lineWidth = 3;
               ctx.beginPath();
-              ctx.arc(castleCenterX + depthX * 0.4, this.groundY, 175, Math.PI, 0);
+              ctx.arc(castleCenterX + depthX * 0.4, this.groundY, 178, Math.PI, 0);
               ctx.fill();
               ctx.stroke();
               ctx.restore();
@@ -3630,53 +3777,58 @@
 
               const hpRatio = blk.hp / blk.maxHp;
 
-              // Kingdom-tailored rich masonry palettes
-              let frontTop = '#854d27', frontBot = '#5c3317', topFace = '#a8673a', sideFace = '#3b1f0c', edgeCol = '#2a1507';
+              // Realistic architectural stone/brick palettes per kingdom
+              let frontTop = '#9c6644', frontBot = '#6f4528', topFace = '#b07d56', sideFace = '#432818', edgeCol = '#2b190e';
               if (k.id === 'osmanli') {
                 if (blk.mat === 'stone') {
-                  frontTop = '#e2e8f0'; frontBot = '#94a3b8'; topFace = '#f8fafc'; sideFace = '#64748b'; edgeCol = '#334155';
+                  frontTop = '#e5e0d8'; frontBot = '#a8a29e'; topFace = '#f5f5f4'; sideFace = '#78716c'; edgeCol = '#44403c';
                 } else {
-                  // Ottoman crimson-terracotta & cream ablaq alternation
                   const isCrimsonRow = blk.row % 2 === 0;
-                  frontTop = isCrimsonRow ? '#991b1b' : '#d6b88d';
-                  frontBot = isCrimsonRow ? '#7f1d1d' : '#a88454';
-                  topFace = isCrimsonRow ? '#dc2626' : '#ebd5b3';
-                  sideFace = '#450a0a';
+                  frontTop = isCrimsonRow ? '#9b2226' : '#dfd3c3';
+                  frontBot = isCrimsonRow ? '#6b1417' : '#b5a48e';
+                  topFace = isCrimsonRow ? '#bb3e03' : '#f0e7db';
+                  sideFace = '#4a0e10';
                   edgeCol = '#291509';
                 }
               } else if (k.id === 'bizans') {
                 if (blk.mat === 'stone') {
-                  frontTop = '#cbd5e1'; frontBot = '#8b9bb4'; topFace = '#e2e8f0'; sideFace = '#4c1d95'; edgeCol = '#2e1065';
+                  frontTop = '#d6d3d1'; frontBot = '#8c8881'; topFace = '#e7e5e4'; sideFace = '#57534e'; edgeCol = '#292524';
                 } else {
-                  // Byzantine imperial porphyry & Roman brick bands
-                  frontTop = '#7e22ce'; frontBot = '#581c87'; topFace = '#a855f7'; sideFace = '#3b0764'; edgeCol = '#1e1b4b';
+                  // Byzantine opus mixtum: red Roman brick alternating with pale stone bands
+                  const isBrick = blk.row % 2 === 0;
+                  frontTop = isBrick ? '#9a3412' : '#d6cfc2';
+                  frontBot = isBrick ? '#7c2d12' : '#a69d8e';
+                  topFace = isBrick ? '#c2410c' : '#e8e2d7';
+                  sideFace = '#431407';
+                  edgeCol = '#291509';
                 }
               } else if (k.id === 'kutsal_roma') {
                 if (blk.mat === 'stone') {
                   frontTop = '#94a3b8'; frontBot = '#475569'; topFace = '#cbd5e1'; sideFace = '#1e293b'; edgeCol = '#0f172a';
                 } else {
-                  frontTop = '#3b5998'; frontBot = '#1e3a8a'; topFace = '#60a5fa'; sideFace = '#172554'; edgeCol = '#0f172a';
+                  frontTop = '#64748b'; frontBot = '#334155'; topFace = '#94a3b8'; sideFace = '#1e293b'; edgeCol = '#0f172a';
                 }
               } else if (k.id === 'memluk') {
                 if (blk.mat === 'stone') {
-                  frontTop = '#fde68a'; frontBot = '#d97706'; topFace = '#fef3c7'; sideFace = '#92400e'; edgeCol = '#451a03';
+                  frontTop = '#f3d59b'; frontBot = '#c6934b'; topFace = '#fae5bc'; sideFace = '#85581d'; edgeCol = '#452908';
                 } else {
-                  // Mamluk golden sandstone & ochre ablaq stripes
+                  // Mamluk honey-limestone & burnt-ochre ablaq
                   const isOchre = blk.row % 2 === 1;
-                  frontTop = isOchre ? '#b45309' : '#e7c68b';
-                  frontBot = isOchre ? '#78350f' : '#c29b57';
-                  topFace = '#f5d79c';
-                  sideFace = '#451a03';
-                  edgeCol = '#291509';
+                  frontTop = isOchre ? '#a44a1f' : '#e6ccb2';
+                  frontBot = isOchre ? '#753111' : '#b89b7e';
+                  topFace = '#f2dec9';
+                  sideFace = '#4a1d08';
+                  edgeCol = '#2b1508';
                 }
               } else if (k.id === 'mogol') {
                 if (blk.mat === 'stone') {
-                  frontTop = '#64748b'; frontBot = '#334155'; topFace = '#94a3b8'; sideFace = '#0f172a'; edgeCol = '#020617';
+                  frontTop = '#78716c'; frontBot = '#44403c'; topFace = '#a8a29e'; sideFace = '#292524'; edgeCol = '#1c1917';
                 } else {
-                  frontTop = '#854d0e'; frontBot = '#522e08'; topFace = '#a16207'; sideFace = '#361c04'; edgeCol = '#1c0d02';
+                  frontTop = '#7c4a21'; frontBot = '#4a2910'; topFace = '#9c6231'; sideFace = '#2e1807'; edgeCol = '#1a0d03';
                 }
               }
 
+              // 3D Top & Side Isometric Faces
               ctx.fillStyle = topFace;
               ctx.beginPath();
               ctx.moveTo(blk.x, blk.y);
@@ -3686,7 +3838,7 @@
               ctx.closePath();
               ctx.fill();
               ctx.strokeStyle = edgeCol;
-              ctx.lineWidth = 0.9;
+              ctx.lineWidth = 0.85;
               ctx.stroke();
 
               const sideEdgeX = side === 0 ? blk.x + blk.w : blk.x;
@@ -3699,69 +3851,102 @@
               ctx.closePath();
               ctx.fill();
               ctx.strokeStyle = edgeCol;
-              ctx.lineWidth = 0.9;
+              ctx.lineWidth = 0.85;
               ctx.stroke();
 
+              // Front Face with subtle weathered variation per block
+              const shadeOffset = ((blk.col * 7 + blk.row * 13) % 5) * 0.025;
               const fGrad = ctx.createLinearGradient(blk.x, blk.y, blk.x, blk.y + blk.h);
               fGrad.addColorStop(0, frontTop);
               fGrad.addColorStop(1, frontBot);
               ctx.fillStyle = fGrad;
               ctx.fillRect(blk.x, blk.y, blk.w, blk.h);
 
-              // Top bevel highlight
-              ctx.fillStyle = 'rgba(255, 255, 255, 0.28)';
-              ctx.fillRect(blk.x + 1, blk.y + 1, blk.w - 2, 2);
+              if (shadeOffset > 0) {
+                ctx.fillStyle = `rgba(0, 0, 0, ${shadeOffset})`;
+                ctx.fillRect(blk.x, blk.y, blk.w, blk.h);
+              }
+
+              // Chiseled stone top bevel & bottom shadow
+              ctx.fillStyle = 'rgba(255, 255, 255, 0.24)';
+              ctx.fillRect(blk.x + 1, blk.y + 1, blk.w - 2, 1.8);
+              ctx.fillStyle = 'rgba(0, 0, 0, 0.22)';
+              ctx.fillRect(blk.x + 1, blk.y + blk.h - 2, blk.w - 2, 1.5);
 
               ctx.strokeStyle = edgeCol;
-              ctx.lineWidth = 1.1;
+              ctx.lineWidth = 1;
               ctx.strokeRect(blk.x + 0.5, blk.y + 0.5, blk.w - 1, blk.h - 1);
 
-              // Ornate window / masonry details per kingdom
+              // Realistic Ashlar Stone Joints, Timber Beams & Arched Embrasure Windows
               if (blk.mat === 'stone') {
+                const stagger = (blk.row % 2 === 0) ? blk.w * 0.5 : blk.w * 0.33;
                 ctx.beginPath();
-                ctx.moveTo(blk.x + blk.w / 2, blk.y);
-                ctx.lineTo(blk.x + blk.w / 2, blk.y + blk.h);
+                ctx.moveTo(blk.x + stagger, blk.y);
+                ctx.lineTo(blk.x + stagger, blk.y + blk.h);
                 ctx.stroke();
 
-                if (blk.row % 2 === 1 && (blk.col === 0 || blk.col === 5)) {
-                  // Glowing golden arrow-slit / arched lancet window
-                  ctx.fillStyle = '#0f172a';
-                  ctx.fillRect(blk.x + blk.w / 2 - 3, blk.y + 3, 6, 15);
-                  ctx.fillStyle = '#fbbf24';
-                  ctx.fillRect(blk.x + blk.w / 2 - 1.5, blk.y + 5, 3, 11);
+                // Recessed arched arrow-slit windows with warm interior glow on outer towers
+                if (blk.row >= 2 && blk.row % 2 === 0 && (blk.col === 0 || blk.col === 5)) {
+                  const wx = blk.x + blk.w / 2;
+                  const wy = blk.y + 4;
+                  ctx.fillStyle = '#1c1917';
+                  ctx.beginPath();
+                  ctx.arc(wx, wy + 4, 4, Math.PI, 0);
+                  ctx.lineTo(wx + 4, wy + 15);
+                  ctx.lineTo(wx - 4, wy + 15);
+                  ctx.closePath();
+                  ctx.fill();
+                  ctx.strokeStyle = 'rgba(255,255,255,0.25)';
+                  ctx.lineWidth = 0.8;
+                  ctx.stroke();
+
+                  // Warm candlelight slit
+                  ctx.fillStyle = '#f59e0b';
+                  ctx.fillRect(wx - 1.2, wy + 3, 2.4, 10);
                 }
               } else if (blk.mat === 'wood') {
+                // Horizontal timber planks + diagonal bracing + iron rivets
                 ctx.beginPath();
                 ctx.moveTo(blk.x + 1, blk.y + blk.h * 0.5);
                 ctx.lineTo(blk.x + blk.w - 1, blk.y + blk.h * 0.5);
+                ctx.moveTo(blk.x + 3, blk.y + 2);
+                ctx.lineTo(blk.x + blk.w - 3, blk.y + blk.h - 2);
                 ctx.stroke();
 
-                ctx.fillStyle = '#eab308';
-                ctx.fillRect(blk.x + 3, blk.y + 3, 2.5, 2.5);
-                ctx.fillRect(blk.x + blk.w - 5.5, blk.y + 3, 2.5, 2.5);
+                ctx.fillStyle = '#94a3b8';
+                ctx.fillRect(blk.x + 3, blk.y + 3, 2, 2);
+                ctx.fillRect(blk.x + blk.w - 5, blk.y + 3, 2, 2);
+                ctx.fillRect(blk.x + 3, blk.y + blk.h - 5, 2, 2);
+                ctx.fillRect(blk.x + blk.w - 5, blk.y + blk.h - 5, 2, 2);
               } else {
+                // Multi-course brickwork joints
                 ctx.beginPath();
-                ctx.moveTo(blk.x, blk.y + blk.h / 2);
-                ctx.lineTo(blk.x + blk.w, blk.y + blk.h / 2);
-                ctx.moveTo(blk.x + blk.w * 0.5, blk.y);
-                ctx.lineTo(blk.x + blk.w * 0.5, blk.y + blk.h / 2);
+                ctx.moveTo(blk.x, blk.y + blk.h * 0.5);
+                ctx.lineTo(blk.x + blk.w, blk.y + blk.h * 0.5);
+                ctx.moveTo(blk.x + blk.w * 0.33, blk.y);
+                ctx.lineTo(blk.x + blk.w * 0.33, blk.y + blk.h * 0.5);
+                ctx.moveTo(blk.x + blk.w * 0.66, blk.y + blk.h * 0.5);
+                ctx.lineTo(blk.x + blk.w * 0.66, blk.y + blk.h);
                 ctx.stroke();
               }
 
-              // Gold ornamental cornice band every 3rd row for grandeur
-              if (blk.row === 2 || blk.row === 5) {
-                ctx.fillStyle = k.secondaryColor;
-                ctx.fillRect(blk.x, blk.y, blk.w, 2.2);
+              // Carved stone string-course molding at tier levels
+              if (blk.row === 3 || blk.row === 6) {
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.22)';
+                ctx.fillRect(blk.x, blk.y, blk.w, 2);
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
+                ctx.fillRect(blk.x, blk.y + 2, blk.w, 1.5);
               }
 
+              // Damage weathering & structural cracks
               if (hpRatio < 0.85 || blk.burnTurns > 0) {
-                ctx.fillStyle = `rgba(15, 10, 5, ${(1 - hpRatio) * 0.42})`;
+                ctx.fillStyle = `rgba(15, 10, 5, ${(1 - hpRatio) * 0.48})`;
                 ctx.fillRect(blk.x, blk.y, blk.w, blk.h);
               }
 
               if (hpRatio < 0.72) {
                 ctx.strokeStyle = '#18120e';
-                ctx.lineWidth = 1.7;
+                ctx.lineWidth = 1.6;
                 ctx.beginPath();
                 ctx.moveTo(blk.x + 6, blk.y + 2);
                 ctx.lineTo(blk.x + 15, blk.y + 11);
@@ -3774,27 +3959,22 @@
                 ctx.stroke();
               }
 
-              // Hanging Royal Tapestry Banner with gold trim & emblem
+              // Hanging Heraldic Tapestry Standard
               if (blk.hasBanner) {
-                ctx.fillStyle = 'rgba(0,0,0,0.4)';
-                ctx.fillRect(blk.x + 9, blk.y + 2, 20, 19);
+                ctx.fillStyle = 'rgba(0,0,0,0.45)';
+                ctx.fillRect(blk.x + 10, blk.y + 2, 18, 19);
                 ctx.fillStyle = k.primaryColor;
                 ctx.beginPath();
-                ctx.moveTo(blk.x + 8, blk.y + 1);
-                ctx.lineTo(blk.x + 28, blk.y + 1);
-                ctx.lineTo(blk.x + 28, blk.y + 20);
+                ctx.moveTo(blk.x + 9, blk.y + 1);
+                ctx.lineTo(blk.x + 27, blk.y + 1);
+                ctx.lineTo(blk.x + 27, blk.y + 19);
                 ctx.lineTo(blk.x + 18, blk.y + 15);
-                ctx.lineTo(blk.x + 8, blk.y + 20);
+                ctx.lineTo(blk.x + 9, blk.y + 19);
                 ctx.closePath();
                 ctx.fill();
                 ctx.strokeStyle = k.secondaryColor;
-                ctx.lineWidth = 1.4;
+                ctx.lineWidth = 1.2;
                 ctx.stroke();
-
-                ctx.fillStyle = k.secondaryColor;
-                ctx.beginPath();
-                ctx.arc(blk.x + 18, blk.y + 9, 3, 0, Math.PI * 2);
-                ctx.fill();
               }
 
               if (blk.burnTurns > 0) {
@@ -3804,59 +3984,85 @@
               }
             }
 
-            // Grand Royal Gatehouse with flanking flaming torches
+            // Realistic Stone Voussoir Arch Gatehouse with Iron Portcullis & Wall Sconces
             const gateCol = side === 0 ? 3 : 2;
             const gateBaseBlock = this.blocks.find(b => b.side === side && b.col === gateCol && b.row === 0 && b.hp > 0);
             if (gateBaseBlock) {
-              const gx = gateBaseBlock.x + 4;
-              const gy = this.groundY - 30;
-              ctx.fillStyle = k.secondaryColor;
+              const gx = gateBaseBlock.x + 3;
+              const gy = this.groundY - 34;
+
+              // Outer stone arch surround
+              ctx.fillStyle = '#94a3b8';
               ctx.beginPath();
-              ctx.arc(gx + 14, gy + 12, 16, Math.PI, 0);
-              ctx.lineTo(gx + 30, this.groundY);
+              ctx.arc(gx + 15, gy + 14, 17, Math.PI, 0);
+              ctx.lineTo(gx + 32, this.groundY);
               ctx.lineTo(gx - 2, this.groundY);
               ctx.closePath();
               ctx.fill();
+              ctx.strokeStyle = '#1e293b';
+              ctx.lineWidth = 1.2;
+              ctx.stroke();
 
-              ctx.fillStyle = '#0f0a06';
+              // Radial arch stones (voussoirs)
+              for (let a = 1; a < 6; a++) {
+                const ang = Math.PI + (Math.PI * a) / 6;
+                ctx.beginPath();
+                ctx.moveTo(gx + 15 + Math.cos(ang) * 12, gy + 14 + Math.sin(ang) * 12);
+                ctx.lineTo(gx + 15 + Math.cos(ang) * 17, gy + 14 + Math.sin(ang) * 17);
+                ctx.stroke();
+              }
+
+              // Dark recessed archway & heavy oak double doors
+              ctx.fillStyle = '#29170b';
               ctx.beginPath();
-              ctx.arc(gx + 14, gy + 12, 12, Math.PI, 0);
-              ctx.lineTo(gx + 26, this.groundY);
-              ctx.lineTo(gx + 2, this.groundY);
+              ctx.arc(gx + 15, gy + 14, 12, Math.PI, 0);
+              ctx.lineTo(gx + 27, this.groundY);
+              ctx.lineTo(gx + 3, this.groundY);
               ctx.closePath();
               ctx.fill();
 
-              // Iron portcullis bars
-              ctx.strokeStyle = '#cbd5e1';
-              ctx.lineWidth = 1.5;
+              // Center door seam & iron reinforcement bands
+              ctx.strokeStyle = '#0f0a06';
+              ctx.lineWidth = 1.4;
               ctx.beginPath();
-              ctx.moveTo(gx + 8, gy + 2);
-              ctx.lineTo(gx + 8, this.groundY);
-              ctx.moveTo(gx + 14, gy + 1);
-              ctx.lineTo(gx + 14, this.groundY);
-              ctx.moveTo(gx + 20, gy + 2);
-              ctx.lineTo(gx + 20, this.groundY);
-              ctx.moveTo(gx + 3, gy + 14);
-              ctx.lineTo(gx + 25, gy + 14);
+              ctx.moveTo(gx + 15, gy + 2);
+              ctx.lineTo(gx + 15, this.groundY);
               ctx.stroke();
 
-              // Twin flickering wall torches beside the gate
-              const flicker = Math.sin(this.animTime * 18 + side) * 1.6;
-              for (const tx of [gx - 4, gx + 32]) {
-                ctx.fillStyle = '#78350f';
-                ctx.fillRect(tx - 1.5, gy + 8, 3, 9);
+              ctx.strokeStyle = '#64748b';
+              ctx.lineWidth = 1.6;
+              ctx.beginPath();
+              ctx.moveTo(gx + 4, gy + 15);
+              ctx.lineTo(gx + 26, gy + 15);
+              ctx.moveTo(gx + 4, gy + 25);
+              ctx.lineTo(gx + 26, gy + 25);
+              ctx.stroke();
+
+              // Flanking wrought-iron wall torches with warm ambient glow
+              const flicker = Math.sin(this.animTime * 18 + side) * 1.5;
+              for (const tx of [gx - 5, gx + 35]) {
+                const tGlow = ctx.createRadialGradient(tx, gy + 7, 1, tx, gy + 7, 16);
+                tGlow.addColorStop(0, 'rgba(251, 191, 36, 0.55)');
+                tGlow.addColorStop(1, 'rgba(251, 191, 36, 0)');
+                ctx.fillStyle = tGlow;
+                ctx.beginPath();
+                ctx.arc(tx, gy + 7, 16, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.fillStyle = '#1e293b';
+                ctx.fillRect(tx - 1.5, gy + 9, 3, 9);
                 ctx.fillStyle = '#f97316';
                 ctx.beginPath();
-                ctx.arc(tx, gy + 6, 4 + flicker * 0.3, 0, Math.PI * 2);
+                ctx.arc(tx, gy + 7, 3.6 + flicker * 0.25, 0, Math.PI * 2);
                 ctx.fill();
                 ctx.fillStyle = '#fef08a';
                 ctx.beginPath();
-                ctx.arc(tx, gy + 6, 2, 0, Math.PI * 2);
+                ctx.arc(tx, gy + 7, 1.8, 0, Math.PI * 2);
                 ctx.fill();
               }
             }
 
-            // Kingdom-Specific Crown Roofs, Spires, Minarets & Battlements
+            // Realistic Corbeled Tower Roofs, Lead Domes, Spires & Stone Crenellations
             const topByCol = {};
             const keepCols = new Set();
             for (const b of this.blocks) {
@@ -3876,93 +4082,126 @@
               if (keepCols.has(topBlk.col)) return;
               const isFlankTower = topBlk.col === outerCol || topBlk.col === innerCol;
 
-              // Grand Kingdom Roof Crowns on flanking towers
               if (isFlankTower) {
                 const cx = topBlk.x + topBlk.w / 2;
                 const ty = topBlk.y;
+
+                // Corbeled stone cornice overhang beneath tower roof
+                ctx.fillStyle = '#475569';
+                ctx.fillRect(topBlk.x - 3, ty - 4, topBlk.w + 6, 4);
+                ctx.strokeStyle = '#0f172a';
+                ctx.lineWidth = 0.9;
+                ctx.strokeRect(topBlk.x - 3, ty - 4, topBlk.w + 6, 4);
+
                 if (k.id === 'osmanli') {
-                  // Slender Ottoman pencil spire with golden crescent finial
-                  ctx.fillStyle = '#334155';
+                  // Realistic Ottoman lead-covered conical spire with stone balcony (şerefe) & golden alem
+                  const spireGrad = ctx.createLinearGradient(cx - 16, ty - 4, cx + 16, ty - 4);
+                  spireGrad.addColorStop(0, '#64748b');
+                  spireGrad.addColorStop(0.4, '#cbd5e1');
+                  spireGrad.addColorStop(1, '#334155');
+                  ctx.fillStyle = spireGrad;
                   ctx.beginPath();
-                  ctx.moveTo(cx - 14, ty);
-                  ctx.lineTo(cx, ty - 34);
-                  ctx.lineTo(cx + 14, ty);
+                  ctx.moveTo(cx - 16, ty - 4);
+                  ctx.lineTo(cx, ty - 40);
+                  ctx.lineTo(cx + 16, ty - 4);
                   ctx.closePath();
                   ctx.fill();
-                  ctx.strokeStyle = '#ffd97d';
-                  ctx.lineWidth = 1.4;
+                  ctx.strokeStyle = '#1e293b';
+                  ctx.lineWidth = 1;
+                  ctx.stroke();
+
+                  // Golden finial spire
+                  ctx.strokeStyle = '#f59e0b';
+                  ctx.lineWidth = 1.8;
+                  ctx.beginPath();
+                  ctx.moveTo(cx, ty - 40);
+                  ctx.lineTo(cx, ty - 49);
                   ctx.stroke();
                   ctx.fillStyle = '#ffd97d';
                   ctx.beginPath();
-                  ctx.arc(cx, ty - 38, 3.5, 0, Math.PI * 2);
+                  ctx.arc(cx, ty - 45, 2.5, 0, Math.PI * 2);
                   ctx.fill();
                 } else if (k.id === 'bizans') {
-                  // Byzantine golden-trimmed brick cupola dome
-                  ctx.fillStyle = '#6b21a8';
+                  // Realistic ribbed Byzantine terracotta & lead dome on windowed drum
+                  ctx.fillStyle = '#d6cfc2';
+                  ctx.fillRect(cx - 15, ty - 11, 30, 7);
+                  ctx.strokeStyle = '#44403c';
+                  ctx.strokeRect(cx - 15, ty - 11, 30, 7);
+
+                  const domeGrad = ctx.createRadialGradient(cx - 5, ty - 18, 2, cx, ty - 11, 18);
+                  domeGrad.addColorStop(0, '#a8a29e');
+                  domeGrad.addColorStop(0.6, '#6b21a8');
+                  domeGrad.addColorStop(1, '#3b0764');
+                  ctx.fillStyle = domeGrad;
                   ctx.beginPath();
-                  ctx.arc(cx, ty, 16, Math.PI, 0);
+                  ctx.arc(cx, ty - 11, 16, Math.PI, 0);
                   ctx.fill();
                   ctx.strokeStyle = '#eab308';
-                  ctx.lineWidth = 1.8;
-                  ctx.stroke();
-                  ctx.beginPath();
-                  ctx.moveTo(cx, ty - 16);
-                  ctx.lineTo(cx, ty - 27);
-                  ctx.moveTo(cx - 4, ty - 23);
-                  ctx.lineTo(cx + 4, ty - 23);
+                  ctx.lineWidth = 1.3;
                   ctx.stroke();
                 } else if (k.id === 'kutsal_roma') {
-                  // Steep Gothic slate spire with gold pinnacle
-                  ctx.fillStyle = '#1e3a8a';
+                  // Steep Gothic slate turret roof with dormer window
+                  const roofGrad = ctx.createLinearGradient(cx - 19, ty - 4, cx + 19, ty - 4);
+                  roofGrad.addColorStop(0, '#334155');
+                  roofGrad.addColorStop(0.45, '#475569');
+                  roofGrad.addColorStop(1, '#0f172a');
+                  ctx.fillStyle = roofGrad;
                   ctx.beginPath();
-                  ctx.moveTo(cx - 17, ty);
-                  ctx.lineTo(cx, ty - 38);
-                  ctx.lineTo(cx + 17, ty);
+                  ctx.moveTo(cx - 19, ty - 4);
+                  ctx.lineTo(cx, ty - 42);
+                  ctx.lineTo(cx + 19, ty - 4);
                   ctx.closePath();
                   ctx.fill();
-                  ctx.strokeStyle = '#cbd5e1';
-                  ctx.lineWidth = 1.4;
+                  ctx.strokeStyle = '#0f172a';
+                  ctx.lineWidth = 1.1;
                   ctx.stroke();
-                  ctx.fillStyle = '#ffd97d';
-                  ctx.fillRect(cx - 1.5, ty - 45, 3, 8);
+
+                  // Dormer window
+                  ctx.fillStyle = '#f59e0b';
+                  ctx.fillRect(cx - 2, ty - 22, 4, 6);
                 } else if (k.id === 'memluk') {
-                  // Carved Mamluk onion/ribbed desert dome
-                  ctx.fillStyle = '#d97706';
+                  // Carved Mamluk fluted stone dome
+                  const mDome = ctx.createRadialGradient(cx - 4, ty - 16, 2, cx, ty - 6, 18);
+                  mDome.addColorStop(0, '#fef3c7');
+                  mDome.addColorStop(0.55, '#d97706');
+                  mDome.addColorStop(1, '#78350f');
+                  ctx.fillStyle = mDome;
                   ctx.beginPath();
-                  ctx.moveTo(cx - 15, ty);
-                  ctx.quadraticCurveTo(cx - 18, ty - 18, cx, ty - 28);
-                  ctx.quadraticCurveTo(cx + 18, ty - 18, cx + 15, ty);
+                  ctx.moveTo(cx - 16, ty - 4);
+                  ctx.quadraticCurveTo(cx - 19, ty - 20, cx, ty - 31);
+                  ctx.quadraticCurveTo(cx + 19, ty - 20, cx + 16, ty - 4);
                   ctx.closePath();
                   ctx.fill();
-                  ctx.strokeStyle = '#fef08a';
-                  ctx.lineWidth = 1.4;
+                  ctx.strokeStyle = '#451a03';
+                  ctx.lineWidth = 1;
                   ctx.stroke();
                 } else if (k.id === 'mogol') {
-                  // Mongol war standard & horned iron roof
-                  ctx.fillStyle = '#0369a1';
+                  // Upturned Mongol lamellar iron pavilion roof
+                  ctx.fillStyle = '#1e293b';
                   ctx.beginPath();
-                  ctx.moveTo(cx - 18, ty);
-                  ctx.quadraticCurveTo(cx, ty - 14, cx, ty - 24);
-                  ctx.quadraticCurveTo(cx, ty - 14, cx + 18, ty);
+                  ctx.moveTo(cx - 20, ty - 4);
+                  ctx.quadraticCurveTo(cx - 4, ty - 12, cx, ty - 27);
+                  ctx.quadraticCurveTo(cx + 4, ty - 12, cx + 20, ty - 4);
                   ctx.closePath();
                   ctx.fill();
-                  ctx.strokeStyle = '#f8fafc';
-                  ctx.lineWidth = 1.3;
+                  ctx.strokeStyle = '#f59e0b';
+                  ctx.lineWidth = 1.2;
                   ctx.stroke();
                 }
                 return;
               }
 
-              const frontCol = topBlk.mat === 'stone' ? '#cbd5e1' : topBlk.mat === 'wood' ? '#92400e' : '#854d27';
-              const topCol = topBlk.mat === 'stone' ? '#e2e8f0' : topBlk.mat === 'wood' ? '#ca8a04' : '#a8673a';
-              const sideCol = topBlk.mat === 'stone' ? '#64748b' : topBlk.mat === 'wood' ? '#451a03' : '#3b1f0c';
+              // Realistic Stone Crenellations (Merlons & Embrasures)
+              const frontCol = topBlk.mat === 'stone' ? '#cbd5e1' : topBlk.mat === 'wood' ? '#7c4a21' : '#9c6644';
+              const topCol = topBlk.mat === 'stone' ? '#e2e8f0' : topBlk.mat === 'wood' ? '#9c6231' : '#b07d56';
+              const sideCol = topBlk.mat === 'stone' ? '#475569' : topBlk.mat === 'wood' ? '#2e1807' : '#432818';
 
               const draw3DMerlon = (mx, my, mw, mh) => {
                 ctx.fillStyle = topCol;
                 ctx.beginPath();
                 ctx.moveTo(mx, my);
-                ctx.lineTo(mx + depthX * 0.6, my + depthY * 0.6);
-                ctx.lineTo(mx + mw + depthX * 0.6, my + depthY * 0.6);
+                ctx.lineTo(mx + depthX * 0.55, my + depthY * 0.55);
+                ctx.lineTo(mx + mw + depthX * 0.55, my + depthY * 0.55);
                 ctx.lineTo(mx + mw, my);
                 ctx.closePath();
                 ctx.fill();
@@ -3971,28 +4210,28 @@
                 ctx.fillStyle = sideCol;
                 ctx.beginPath();
                 ctx.moveTo(sX, my);
-                ctx.lineTo(sX + depthX * 0.6, my + depthY * 0.6);
-                ctx.lineTo(sX + depthX * 0.6, my + mh + depthY * 0.6);
+                ctx.lineTo(sX + depthX * 0.55, my + depthY * 0.55);
+                ctx.lineTo(sX + depthX * 0.55, my + mh + depthY * 0.55);
                 ctx.lineTo(sX, my + mh);
                 ctx.closePath();
                 ctx.fill();
 
                 ctx.fillStyle = frontCol;
                 ctx.fillRect(mx, my, mw, mh);
-                ctx.strokeStyle = k.secondaryColor;
-                ctx.lineWidth = 0.8;
+                ctx.strokeStyle = '#1e293b';
+                ctx.lineWidth = 0.85;
                 ctx.strokeRect(mx, my, mw, mh);
               };
 
-              draw3DMerlon(topBlk.x + 1, topBlk.y - 9, 10, 9);
-              draw3DMerlon(topBlk.x + topBlk.w - 11, topBlk.y - 9, 10, 9);
+              draw3DMerlon(topBlk.x + 1, topBlk.y - 10, 10, 10);
+              draw3DMerlon(topBlk.x + topBlk.w - 11, topBlk.y - 10, 10, 10);
             });
           }
         }
 
-        _renderRoyalKeepBlock(ctx, blk, kingdom, depthX = 15, depthY = -10) {
-          const kx = blk.x + 2;
-          const kw = blk.w - 4;
+        _renderRoyalKeepBlock(ctx, blk, kingdom, depthX = 16, depthY = -11) {
+          const kx = blk.x + 1;
+          const kw = blk.w - 2;
 
           const sideX = blk.side === 0 ? kx + kw : kx;
           ctx.fillStyle = '#1e293b';
@@ -4004,68 +4243,66 @@
           ctx.closePath();
           ctx.fill();
 
+          // Chiseled Royal Keep Stonework
           const kGrad = ctx.createLinearGradient(kx, blk.y, kx + kw, blk.y);
-          kGrad.addColorStop(0, '#94a3b8');
-          kGrad.addColorStop(0.5, '#64748b');
-          kGrad.addColorStop(1, '#334155');
+          kGrad.addColorStop(0, '#cbd5e1');
+          kGrad.addColorStop(0.5, '#94a3b8');
+          kGrad.addColorStop(1, '#475569');
           ctx.fillStyle = kGrad;
           ctx.fillRect(kx, blk.y, kw, blk.h);
-          ctx.strokeStyle = kingdom.secondaryColor;
-          ctx.lineWidth = 1.4;
+          ctx.strokeStyle = '#1e293b';
+          ctx.lineWidth = 1.2;
           ctx.strokeRect(kx, blk.y, kw, blk.h);
 
-          // Royal Commander silhouette inside golden throne balcony
+          // Royal Balcony & Commander
+          ctx.fillStyle = '#1e293b';
+          ctx.fillRect(blk.x + 7, blk.y + 6, blk.w - 14, 16);
           ctx.fillStyle = '#f3c69f';
           ctx.beginPath();
-          ctx.arc(blk.x + blk.w / 2, blk.y + 13, 6.5, 0, Math.PI * 2);
+          ctx.arc(blk.x + blk.w / 2, blk.y + 13, 5.5, 0, Math.PI * 2);
           ctx.fill();
           ctx.fillStyle = kingdom.primaryColor;
-          ctx.fillRect(blk.x + 9, blk.y + 19, blk.w - 18, 9);
+          ctx.fillRect(blk.x + 8, blk.y + 18, blk.w - 16, 9);
           ctx.strokeStyle = kingdom.secondaryColor;
           ctx.lineWidth = 1;
-          ctx.strokeRect(blk.x + 9, blk.y + 19, blk.w - 18, 9);
+          ctx.strokeRect(blk.x + 8, blk.y + 18, blk.w - 16, 9);
 
-          // Kingdom-Specific Grand Dome / Royal Canopy
+          // Kingdom-Specific Realistic Imperial Dome / Citadel Roof
           const domeX = blk.x + blk.w / 2;
-          const domeGrad = ctx.createRadialGradient(domeX - 5, blk.y - 7, 2, domeX, blk.y, 22);
-          domeGrad.addColorStop(0, kingdom.secondaryColor);
+          const domeGrad = ctx.createRadialGradient(domeX - 6, blk.y - 9, 2, domeX, blk.y, 24);
+          domeGrad.addColorStop(0, '#e2e8f0');
           domeGrad.addColorStop(0.45, kingdom.primaryColor);
-          domeGrad.addColorStop(1, '#1e1b4b');
+          domeGrad.addColorStop(1, '#0f172a');
           ctx.fillStyle = domeGrad;
 
           if (kingdom.id === 'kutsal_roma') {
-            // High Gothic Citadel Spire Roof
             ctx.beginPath();
-            ctx.moveTo(domeX - 20, blk.y);
-            ctx.lineTo(domeX, blk.y - 28);
-            ctx.lineTo(domeX + 20, blk.y);
+            ctx.moveTo(domeX - 21, blk.y);
+            ctx.lineTo(domeX, blk.y - 30);
+            ctx.lineTo(domeX + 21, blk.y);
             ctx.closePath();
             ctx.fill();
           } else if (kingdom.id === 'mogol') {
-            // Imperial Golden Khan Yurt Canopy
             ctx.beginPath();
             ctx.moveTo(domeX - 22, blk.y);
-            ctx.lineTo(domeX - 15, blk.y - 12);
-            ctx.lineTo(domeX, blk.y - 22);
-            ctx.lineTo(domeX + 15, blk.y - 12);
-            ctx.lineTo(domeX + 22, blk.y);
+            ctx.quadraticCurveTo(domeX - 6, blk.y - 10, domeX, blk.y - 24);
+            ctx.quadraticCurveTo(domeX + 6, blk.y - 10, domeX + 22, blk.y);
             ctx.closePath();
             ctx.fill();
           } else {
-            // Grand Imperial Dome (Ottoman / Byzantine / Mamluk)
             ctx.beginPath();
             ctx.arc(domeX, blk.y, 20, Math.PI, 0);
             ctx.fill();
           }
           ctx.strokeStyle = kingdom.secondaryColor;
-          ctx.lineWidth = 1.8;
+          ctx.lineWidth = 1.6;
           ctx.stroke();
 
           // Tall Golden Royal Flagpole & Waving Banner
           const poleX = domeX;
           const poleTopY = blk.y - 54;
           ctx.strokeStyle = '#fef08a';
-          ctx.lineWidth = 2.6;
+          ctx.lineWidth = 2.4;
           ctx.beginPath();
           ctx.moveTo(poleX, blk.y - 18);
           ctx.lineTo(poleX, poleTopY);
@@ -4073,7 +4310,7 @@
 
           ctx.fillStyle = '#ffd97d';
           ctx.beginPath();
-          ctx.arc(poleX, poleTopY - 2, 3.5, 0, Math.PI * 2);
+          ctx.arc(poleX, poleTopY - 2, 3.2, 0, Math.PI * 2);
           ctx.fill();
 
           const wave = Math.sin(this.animTime * 6 + blk.side) * 4;
