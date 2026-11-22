@@ -2704,30 +2704,61 @@
           const cols = 6;
           const baseStartX = side === 0 ? 110 : this.W - 110 - cols * blockW;
 
+          // Each kingdom has a distinct architectural silhouette, tower spacing & roof style
+          // Note: c = 0 is the rear wall, c = 5 is the front wall facing the battlefield
           const kingdomProfiles = {
-            osmanli:     { heights: [6, 8, 6, 7, 8, 9], keepCol: 2, primaryMat: 'brick', accentMat: 'stone', trimMat: 'stone' },
-            bizans:      { heights: [5, 6, 7, 8, 9, 7], keepCol: 3, primaryMat: 'stone', accentMat: 'brick', trimMat: 'stone' },
-            kutsal_roma: { heights: [7, 9, 6, 6, 9, 7], keepCol: 1, primaryMat: 'stone', accentMat: 'stone', trimMat: 'wood'  },
-            memluk:      { heights: [6, 8, 7, 7, 8, 6], keepCol: 2, primaryMat: 'brick', accentMat: 'stone', trimMat: 'wood'  },
-            mogol:       { heights: [5, 7, 8, 7, 6, 6], keepCol: 2, primaryMat: 'wood',  accentMat: 'stone', trimMat: 'wood'  }
+            osmanli: {
+              // Imperial Mosque-Fortress Silhouette: Low outer walls, twin slender minaret-spires (c=1,3), grand central dome (c=2)
+              heights: [5, 9, 7, 9, 6, 4],
+              keepCol: 2,
+              primaryMat: 'brick',
+              accentMat: 'stone',
+              trimMat: 'stone',
+              towerRoofs: { 0: 'ottoman_merlon', 1: 'minaret', 3: 'minaret', 4: 'ottoman_merlon', 5: 'ottoman_merlon' }
+            },
+            bizans: {
+              // Theodosian Stepped Triple-Wall: Soaring rear citadel (c=0,1), mid-tier bastion (c=2,3), low front moat wall (c=4,5)
+              heights: [10, 8, 7, 6, 5, 3],
+              keepCol: 1,
+              primaryMat: 'stone',
+              accentMat: 'brick',
+              trimMat: 'stone',
+              towerRoofs: { 0: 'byzantine_turret', 2: 'merlon', 3: 'merlon', 4: 'merlon', 5: 'merlon' }
+            },
+            kutsal_roma: {
+              // Gothic Needle-Spire Citadel: Tall front & rear pointed spires (c=1,4) flanking a deep courtyard (c=2,3)
+              heights: [6, 10, 5, 6, 11, 5],
+              keepCol: 4,
+              primaryMat: 'stone',
+              accentMat: 'stone',
+              trimMat: 'stone',
+              towerRoofs: { 0: 'machicolation', 1: 'gothic_spire', 2: 'machicolation', 3: 'machicolation', 5: 'machicolation' }
+            },
+            memluk: {
+              // Cairo Oasis Palace-Citadel: Broad terraced ramparts with twin ribbed bulbous domes & sawtooth merlons
+              heights: [6, 8, 9, 8, 7, 5],
+              keepCol: 2,
+              primaryMat: 'brick',
+              accentMat: 'stone',
+              trimMat: 'stone',
+              towerRoofs: { 0: 'sawtooth', 1: 'mamluk_dome', 3: 'sawtooth', 4: 'sawtooth', 5: 'sawtooth' }
+            },
+            mogol: {
+              // Steppe Ordu & Great Khan Yurt-Pavilion: Wide pyramid timber-and-stone bastion with sweeping pavilion eaves
+              heights: [4, 6, 8, 8, 6, 4],
+              keepCol: 2,
+              primaryMat: 'wood',
+              accentMat: 'stone',
+              trimMat: 'wood',
+              towerRoofs: { 0: 'palisade_spike', 1: 'pagoda', 3: 'pagoda', 4: 'palisade_spike', 5: 'palisade_spike' }
+            }
           };
 
           const prof = kingdomProfiles[kingdom.id] || kingdomProfiles.osmanli;
-          let colHeights = [...prof.heights];
-
-          if (layout === 'outpost') {
-            colHeights = colHeights.map(h => Math.max(5, h - 1));
-          } else if (layout === 'strait') {
-            colHeights = [8, 6, 5, 5, 7, 9];
-          } else if (layout === 'desert') {
-            colHeights = [6, 9, 7, 7, 8, 6];
-          } else if (layout === 'bastion') {
-            colHeights = [7, 8, 7, 8, 9, 9];
-          } else if (layout === 'steppe') {
-            colHeights = [6, 8, 9, 8, 7, 6];
-          } else if (layout === 'imperial') {
-            colHeights = [7, 8, 9, 9, 10, 8];
-          }
+          const heightMod = layout === 'outpost' ? -1
+            : (layout === 'bastion' || layout === 'imperial') ? 1
+            : 0;
+          const colHeights = prof.heights.map(h => Math.max(3, Math.min(11, h + heightMod)));
 
           for (let c = 0; c < cols; c++) {
             const visualCol = side === 0 ? c : (cols - 1 - c);
@@ -2739,18 +2770,22 @@
               let mat = prof.primaryMat;
 
               if (c === cols - 1 || (layout === 'bastion' && c >= cols - 2) || (layout === 'imperial' && (c === 0 || c >= cols - 2))) {
-                mat = 'stone';
+                mat = kingdom.id === 'mogol' ? 'wood' : 'stone';
               } else if (r === h - 1) {
                 mat = prof.trimMat;
               } else if ((c + r) % 3 === 0) {
                 mat = prof.accentMat;
               }
 
+              const isTopOfCol = (r === h - 1) && (c !== prof.keepCol);
+              const roofType = isTopOfCol ? (prof.towerRoofs[c] || 'merlon') : 'none';
+
               const baseBlockHp = mat === 'stone' ? 68 : mat === 'brick' ? 42 : 28;
               this.blocks.push({
                 id: `${side}_${c}_${r}`,
                 side,
                 col: visualCol,
+                logicalCol: c,
                 row: r,
                 x: bx,
                 y: by,
@@ -2761,7 +2796,8 @@
                 maxHp: baseBlockHp,
                 burnTurns: 0,
                 isKeep: false,
-                hasBanner: (c === cols - 1 && r === h - 2) || (c === 0 && r === h - 2)
+                roofType,
+                hasBanner: (c === cols - 1 && r === h - 1) || (c === 0 && r === h - 1)
               });
             }
 
@@ -2771,6 +2807,7 @@
                 id: `${side}_keep`,
                 side,
                 col: visualCol,
+                logicalCol: c,
                 row: h,
                 x: bx,
                 y: keepY,
@@ -2781,148 +2818,115 @@
                 maxHp: 88,
                 burnTurns: 0,
                 isKeep: true,
+                roofType: 'keep',
                 hasBanner: false
               });
             }
           }
         }
 
-        _rollWind(announceSurprise = true) {
-          const prevWind = this.wind;
-
-          if (this.mode === 'campaign' && this.windSurprise) {
-            if (this.windSurprise === 'breeze') {
-              if (this.turnCount % 3 === 0) {
-                this.wind = this.rng() > 0.5 ? 4 : -4;
-                if (announceSurprise && this.wind !== prevWind) {
-                  this._spawnFloatingText(this.W / 2, 185, t('windSurpriseBreeze'), '#7dd3fc');
-                }
-              } else {
-                this.wind = 0;
-              }
-              return;
-            }
-            if (this.windSurprise === 'strait_shift') {
-              const mag = 6 + Math.round(this.rng() * 6);
-              const dir = prevWind >= 0 ? -1 : 1;
-              this.wind = dir * mag;
-              if (announceSurprise) {
-                this._spawnFloatingText(this.W / 2, 185, t('windSurpriseGust'), '#38bdf8');
-              }
-              return;
-            }
-            if (this.windSurprise === 'sandstorm') {
-              if (this.turnCount % 3 === 0) {
-                this.wind = (this.rng() > 0.5 ? 1 : -1) * (13 + Math.round(this.rng() * 4));
-                this.sandstormAlpha = 0.42;
-                if (announceSurprise) {
-                  this._spawnFloatingText(this.W / 2, 185, t('windSurpriseSandstorm'), '#fbbf24');
-                }
-              } else {
-                this.wind = Math.round((this.rng() * 12) - 6);
-              }
-              return;
-            }
-            if (this.windSurprise === 'mountain_eddy') {
-              if (this.turnCount % 2 === 0) {
-                this.wind = 0;
-                if (announceSurprise && prevWind !== 0) {
-                  this._spawnFloatingText(this.W / 2, 185, t('windSurpriseCalm'), '#fde047');
-                }
-              } else {
-                this.wind = (this.rng() > 0.5 ? 1 : -1) * (10 + Math.round(this.rng() * 5));
-                if (announceSurprise) {
-                  this._spawnFloatingText(this.W / 2, 185, t('windSurpriseGust'), '#93c5fd');
-                }
-              }
-              return;
-            }
-            if (this.windSurprise === 'steppe_gale' || this.windSurprise === 'imperial_tempest') {
-              const minMag = this.windSurprise === 'imperial_tempest' ? 11 : 9;
-              const mag = minMag + Math.round(this.rng() * 6);
-              const dir = (this.turnCount % 2 === 0 && prevWind !== 0) ? -Math.sign(prevWind) : (this.rng() > 0.5 ? 1 : -1);
-              this.wind = dir * mag;
-              if (announceSurprise && this.turnCount % 2 === 0) {
-                this._spawnFloatingText(this.W / 2, 185, t('windSurpriseStorm'), '#f87171');
-              }
-              return;
-            }
-          }
-
-          if (this.windMode === 'calm') {
-            this.wind = 0;
-          } else if (this.windMode === 'storm') {
-            this.wind = Math.round((this.rng() * 32) - 16);
-          } else {
-            this.wind = Math.round((this.rng() * 20) - 10);
-          }
-        }
-
         getActivePlayer() {
-          return this.players[this.turnSide];
+          return this.players[this.turnSide] || this.players[0];
         }
 
-        selectWeapon(weaponId) {
-          if (!this.running || this.phase !== 'aim' || this.gameOver) return;
-          if (!this._canLocalControlTurn()) return;
+        _canLocalControlTurn() {
+          if (!this.running || this.paused || this.gameOver || this.phase !== 'aim') return false;
+          if (this.mode === 'campaign' || this.mode === 'quick') {
+            return this.turnSide === 0;
+          }
+          if (this.mode === 'online') {
+            if (onlineMgr.isDemo) return this.turnSide === 0;
+            const mySide = onlineMgr.role === 'guest' ? 1 : 0;
+            return this.turnSide === mySide;
+          }
+          return true; // local2p
+        }
 
+        _rollWind(announce = true) {
+          let newWind = 0;
+          if (this.windMode === 'calm') {
+            newWind = 0;
+            if (this.windSurprise === 'breeze' && this.turnCount % 3 === 0) {
+              newWind = this.rng() < 0.5 ? -3 : 3;
+              if (announce) this._spawnFloatingText(this.W * 0.5, 130, t('windSurpriseBreeze'), '#a7f3d0');
+            }
+          } else if (this.windMode === 'storm') {
+            const mag = 7 + Math.floor(this.rng() * 8);
+            const sign = this.rng() < 0.5 ? -1 : 1;
+            newWind = mag * sign;
+            if (announce && this.turnCount > 1 && this.turnCount % 2 === 0) {
+              this._spawnFloatingText(this.W * 0.5, 130, t('windSurpriseStorm'), '#fca5a5');
+            }
+          } else {
+            if (this.windSurprise === 'strait_shift' && this.turnCount > 1) {
+              const prevSign = this.wind >= 0 ? -1 : 1;
+              newWind = prevSign * (4 + Math.floor(this.rng() * 5));
+              if (announce) this._spawnFloatingText(this.W * 0.5, 130, t('windSurpriseGust'), '#bae6fd');
+            } else if (this.windSurprise === 'sandstorm' && this.turnCount % 3 === 0) {
+              newWind = (this.rng() < 0.5 ? -1 : 1) * (9 + Math.floor(this.rng() * 5));
+              this.sandstormAlpha = 0.35;
+              if (announce) this._spawnFloatingText(this.W * 0.5, 130, t('windSurpriseSandstorm'), '#fde68a');
+            } else if (this.windSurprise === 'mountain_eddy') {
+              if (this.turnCount % 2 === 0) {
+                newWind = 0;
+                if (announce) this._spawnFloatingText(this.W * 0.5, 130, t('windSurpriseCalm'), '#fef08a');
+              } else {
+                newWind = (this.rng() < 0.5 ? -1 : 1) * (6 + Math.floor(this.rng() * 5));
+              }
+            } else {
+              newWind = Math.floor(this.rng() * 15) - 7;
+            }
+          }
+          this.wind = newWind;
+        }
+
+        selectWeapon(weaponKey) {
+          if (!this._canLocalControlTurn()) return;
           const p = this.getActivePlayer();
           if (!p) return;
 
-          if (weaponId === 'cannon' && p.siegeTier < 2) {
+          if (weaponKey === 'cannon' && (p.siegeTier || 0) < 2) {
             showToast(t('siegeLockedCannon'));
             return;
           }
 
-          const cost = this.getAmmoCost(p, weaponId);
+          const cost = this.getAmmoCost(p, weaponKey);
           if (p.gold < cost) {
             showToast(t('toastInsufficientGold', cost));
             return;
           }
 
-          if (weaponId === 'repair') {
-            p.gold -= cost;
-            p.activeSkillAmmo = null;
-            p.selectedWeapon = 'stone';
-            this._healCastle(p.side, 22);
-            sound.playFanfare('repair');
-
-            if (this.mode === 'online' && !onlineMgr.isDemo) {
-              onlineMgr.postEvent({
-                type: 'SHOT',
-                turn: this.turnCount,
-                playerId: onlineMgr.playerId,
-                weapon: 'repair',
-                angle: p.angle,
-                power: p.power,
-                wind: this.wind
-              });
+          if (weaponKey === 'repair') {
+            if (p.gold < 12) {
+              showToast(t('toastRepairGold'));
+              return;
             }
-
-            onBattleStateUpdated();
-            this.phase = 'turn_transition';
-            this.phaseTimer = 0.85;
+            p.gold -= 12;
+            p.activeSkillAmmo = null;
+            this._healCastle(p, 28);
+            sound.playFanfare('repair');
+            this._spawnFloatingText(p.catapultX, p.catapultY - 85, t('floatRepair', 28), '#6ee7b7');
+            this._advanceTurn();
             return;
           }
 
-          p.selectedWeapon = weaponId;
           p.activeSkillAmmo = null;
+          p.selectedWeapon = weaponKey;
           onBattleStateUpdated();
         }
 
-        activateSkill(slot) {
-          if (!this.running || this.phase !== 'aim' || this.gameOver) return;
+        activateSkill(slotNum) {
           if (!this._canLocalControlTurn()) return;
-
           const p = this.getActivePlayer();
           if (!p) return;
-          const skill = slot === 1 ? p.kingdom.skill1 : p.kingdom.skill2;
-          const cd = slot === 1 ? p.skill1Cooldown : p.skill2Cooldown;
 
+          const skill = slotNum === 1 ? p.kingdom.skill1 : p.kingdom.skill2;
+          const cd = slotNum === 1 ? p.skill1Cooldown : p.skill2Cooldown;
           const reqTier = this.getRequiredTierForSkill(skill);
-          if (p.siegeTier < reqTier) {
-            const reqName = t('siegeTiers')[reqTier].name;
-            showToast(t('siegeLockedSkill', getSkillName(skill), reqName));
+
+          if ((p.siegeTier || 0) < reqTier) {
+            const tierName = t('siegeTiers')[reqTier]?.name || '';
+            showToast(t('siegeLockedSkill', getSkillName(skill), tierName));
             return;
           }
 
@@ -2931,9 +2935,9 @@
             return;
           }
 
-          const skillCost = this.getAmmoCost(p, skill.type) || skill.cost;
-          if (p.gold < skillCost) {
-            showToast(t('toastInsufficientGold', skillCost));
+          const cost = this.getAmmoCost(p, skill.type) || skill.cost;
+          if (p.gold < cost) {
+            showToast(t('toastInsufficientGold', cost));
             return;
           }
 
@@ -2943,1102 +2947,738 @@
               return;
             }
             p.mehterBuff = true;
-            p.skill1Cooldown = skill.cooldown;
+            if (slotNum === 1) p.skill1Cooldown = skill.cooldown;
+            else p.skill2Cooldown = skill.cooldown;
             sound.playFanfare('mehter');
-            this._spawnFloatingText(p.catapultX, p.catapultY - 85, t('floatMehter'), '#ffd97d');
+            this._spawnFloatingText(p.catapultX, p.catapultY - 90, t('floatMehter'), '#ffd97d');
             showToast(t('toastMehterPlayed'));
             onBattleStateUpdated();
             return;
           }
 
           if (skill.type === 'instant_fortify') {
-            p.gold -= skillCost;
-            if (slot === 1) p.skill1Cooldown = skill.cooldown;
+            p.gold -= cost;
+            if (slotNum === 1) p.skill1Cooldown = skill.cooldown;
             else p.skill2Cooldown = skill.cooldown;
-            this._healCastle(p.side, 26);
+            this._healCastle(p, 28);
             sound.playFanfare('repair');
-            this._endTurnAfterInstantAction('SUR TAHKİMİ');
+            this._spawnFloatingText(p.catapultX, p.catapultY - 90, t('floatRepair', 28), '#6ee7b7');
+            this._advanceTurn();
             return;
           }
 
           if (skill.type === 'instant_shield') {
-            p.gold -= skillCost;
-            if (slot === 1) p.skill1Cooldown = skill.cooldown;
+            p.gold -= cost;
+            if (slotNum === 1) p.skill1Cooldown = skill.cooldown;
             else p.skill2Cooldown = skill.cooldown;
             p.shieldActive = true;
             sound.playFanfare('repair');
             this._spawnFloatingText(p.catapultX, p.catapultY - 90, t('floatShield'), '#38bdf8');
-            this._endTurnAfterInstantAction('KUTSAL KALKAN');
+            onBattleStateUpdated();
             return;
           }
 
           if (skill.type === 'instant_sandstorm') {
-            p.gold -= skillCost;
-            if (slot === 1) p.skill1Cooldown = skill.cooldown;
+            p.gold -= cost;
+            if (slotNum === 1) p.skill1Cooldown = skill.cooldown;
             else p.skill2Cooldown = skill.cooldown;
-            this.wind = p.side === 0 ? -15 : 15;
+            const oppDir = p.side === 0 ? -1 : 1;
+            this.wind = oppDir * (10 + Math.floor(Math.random() * 4));
             this.sandstormAlpha = 0.45;
-            sound.playExplosion();
-            this._spawnFloatingText(this.W / 2, 220, t('floatSandstorm'), '#f59e0b');
-            this._endTurnAfterInstantAction('KUM FIRTINASI');
+            sound.playFanfare('mehter');
+            this._spawnFloatingText(this.W * 0.5, 145, t('floatSandstorm'), '#fde68a');
+            onBattleStateUpdated();
             return;
           }
 
-          p.activeSkillAmmo = skill.type;
-          p.selectedWeapon = 'skill';
-          showToast(t('toastSkillLoaded', getSkillName(skill)));
-          onBattleStateUpdated();
-        }
-
-        _endTurnAfterInstantAction(actionCode) {
-          if (this.mode === 'online' && !onlineMgr.isDemo) {
-            onlineMgr.postEvent({
-              type: 'SHOT',
-              turn: this.turnCount,
-              playerId: onlineMgr.playerId,
-              instantAction: actionCode,
-              wind: this.wind,
-              timestamp: Date.now()
-            });
+          // Toggle special projectile ammunition
+          if (p.activeSkillAmmo === skill.type) {
+            p.activeSkillAmmo = null;
+          } else {
+            p.activeSkillAmmo = skill.type;
+            showToast(t('toastSkillLoaded', getSkillName(skill)));
           }
           onBattleStateUpdated();
-          this.phase = 'turn_transition';
-          this.phaseTimer = 0.85;
         }
 
-        adjustAim(deltaAngle, deltaPower) {
-          if (!this.running || this.phase !== 'aim' || this.gameOver) return;
+        _healCastle(player, amount) {
+          player.hp = Math.min(player.maxHp, player.hp + amount);
+          const sideBlocks = this.blocks.filter(b => b.side === player.side && b.hp > 0 && b.hp < b.maxHp);
+          if (sideBlocks.length > 0) {
+            const perBlock = Math.ceil(amount / sideBlocks.length);
+            sideBlocks.forEach(b => {
+              b.hp = Math.min(b.maxHp, b.hp + perBlock);
+              b.burnTurns = 0;
+            });
+          }
+        }
+
+        adjustAim(dAngle, dPower) {
           if (!this._canLocalControlTurn()) return;
           const p = this.getActivePlayer();
           if (!p) return;
-          p.angle = Math.max(15, Math.min(82, Math.round(p.angle + deltaAngle)));
-          p.power = Math.max(25, Math.min(100, Math.round(p.power + deltaPower)));
+          p.angle = Math.max(15, Math.min(82, p.angle + dAngle));
+          p.power = Math.max(25, Math.min(100, p.power + dPower));
           onBattleStateUpdated();
         }
 
-        _canLocalControlTurn() {
-          if (this.mode === 'campaign' || this.mode === 'quick') {
-            return this.turnSide === 0;
-          }
-          if (this.mode === 'local2p') {
-            return true;
-          }
-          if (this.mode === 'online') {
-            if (onlineMgr.isDemo) return this.turnSide === 0;
-            return (onlineMgr.role === 'host' && this.turnSide === 0) ||
-                   (onlineMgr.role === 'guest' && this.turnSide === 1);
-          }
-          return false;
-        }
-
-        fireCurrentShot(overrideParams = null) {
-          if (this.gameOver) return;
+        fireCurrentShot(remoteMsg = null) {
+          if (!this.running || this.paused || this.gameOver) return;
           const p = this.getActivePlayer();
           if (!p) return;
 
-          if (overrideParams) {
-            if (typeof overrideParams.upgradeSiegeTier === 'number') {
-              p.siegeTier = Math.min(3, overrideParams.upgradeSiegeTier);
+          // Handle incoming online opponent actions
+          if (remoteMsg) {
+            if (remoteMsg.upgradeSiegeTier !== undefined) {
+              p.siegeTier = Math.min(3, remoteMsg.upgradeSiegeTier);
               const tierInfo = t('siegeTiers')[p.siegeTier];
+              sound.playFanfare('repair');
               this._spawnFloatingText(p.catapultX, p.catapultY - 92, `⚙️ ${tierInfo.short}!`, '#ffd97d');
               onBattleStateUpdated();
               return;
             }
-            if (overrideParams.instantAction) {
-              if (overrideParams.instantAction === 'SUR TAHKİMİ') this._healCastle(p.side, 26);
-              if (overrideParams.instantAction === 'KUTSAL KALKAN') {
-                p.shieldActive = true;
-                this._spawnFloatingText(p.catapultX, p.catapultY - 90, t('floatShield'), '#38bdf8');
-              }
-              if (overrideParams.instantAction === 'KUM FIRTINASI') {
-                this.wind = overrideParams.wind;
-                this.sandstormAlpha = 0.45;
-                this._spawnFloatingText(this.W / 2, 220, t('floatSandstorm'), '#f59e0b');
-              }
-              this.phase = 'turn_transition';
-              this.phaseTimer = 0.9;
-              return;
-            }
-            p.angle = overrideParams.angle;
-            p.power = overrideParams.power;
-            p.selectedWeapon = overrideParams.weapon || 'stone';
-            p.activeSkillAmmo = overrideParams.skillAmmo || null;
-            if (overrideParams.mehterBuff) p.mehterBuff = true;
+            if (this.phase !== 'online_waiting') return;
+            p.angle = remoteMsg.angle ?? p.angle;
+            p.power = remoteMsg.power ?? p.power;
+            p.selectedWeapon = remoteMsg.weapon || 'stone';
+            p.activeSkillAmmo = remoteMsg.skillAmmo || null;
+            if (typeof remoteMsg.wind === 'number') this.wind = remoteMsg.wind;
           } else {
-            if (this.phase !== 'aim' || !this._canLocalControlTurn()) return;
+            if (this.phase !== 'aim') return;
+            if (this.mode === 'online' && !onlineMgr.isDemo && !this._canLocalControlTurn()) return;
           }
 
-          if (p.selectedWeapon === 'repair' && !p.activeSkillAmmo) {
-            if (!overrideParams) {
-              if (p.gold < 12) {
-                showToast(t('toastRepairGold'));
-                return;
-              }
-              p.gold -= 12;
-            }
-            this._healCastle(p.side, 22);
-            sound.playFanfare('repair');
-
-            if (!overrideParams && this.mode === 'online' && !onlineMgr.isDemo) {
-              onlineMgr.postEvent({
-                type: 'SHOT',
-                turn: this.turnCount,
-                playerId: onlineMgr.playerId,
-                weapon: 'repair',
-                angle: p.angle,
-                power: p.power,
-                wind: this.wind
-              });
-            }
-
+          const ammoType = p.activeSkillAmmo || p.selectedWeapon || 'stone';
+          const cost = this.getAmmoCost(p, ammoType);
+          if (p.gold < cost) {
+            p.activeSkillAmmo = null;
             p.selectedWeapon = 'stone';
+            showToast(t('toastInsufficientGold', cost));
             onBattleStateUpdated();
-            this.phase = 'turn_transition';
-            this.phaseTimer = 0.85;
             return;
           }
 
-          const ammoType = p.activeSkillAmmo || p.selectedWeapon;
-          const cost = this.getAmmoCost(p, ammoType);
-
-          if (!overrideParams) {
-            if (p.gold < cost) {
-              showToast(t('toastInsufficientGold', cost));
-              p.selectedWeapon = 'stone';
-              p.activeSkillAmmo = null;
-              onBattleStateUpdated();
-              return;
-            }
-            p.gold -= cost;
-
-            if (p.activeSkillAmmo) {
-              if (p.kingdom.skill1.type === p.activeSkillAmmo && p.kingdom.skill1.cooldown > 0) {
-                p.skill1Cooldown = p.kingdom.skill1.cooldown;
-              }
-              if (p.kingdom.skill2.type === p.activeSkillAmmo && p.kingdom.skill2.cooldown > 0) {
-                p.skill2Cooldown = p.kingdom.skill2.cooldown;
-              }
-            }
-
-            if (this.mode === 'online' && !onlineMgr.isDemo) {
-              onlineMgr.postEvent({
-                type: 'SHOT',
-                turn: this.turnCount,
-                playerId: onlineMgr.playerId,
-                angle: p.angle,
-                power: p.power,
-                weapon: p.selectedWeapon,
-                skillAmmo: p.activeSkillAmmo,
-                mehterBuff: p.mehterBuff,
-                wind: this.wind,
-                timestamp: Date.now()
-              });
-            }
+          // Broadcast shot to online opponent before mutating state
+          if (!remoteMsg && this.mode === 'online' && !onlineMgr.isDemo) {
+            onlineMgr.postEvent({
+              type: 'SHOT',
+              turn: this.turnCount,
+              playerId: onlineMgr.playerId,
+              angle: p.angle,
+              power: p.power,
+              weapon: p.selectedWeapon,
+              skillAmmo: p.activeSkillAmmo,
+              wind: this.wind,
+              timestamp: Date.now()
+            });
           }
 
-          this.phase = 'firing';
-          p.recoil = 1.0;
+          p.gold -= cost;
 
-          const isHeavy = ammoType === 'cannon' || ammoType === 'ammo_sahi' || ammoType === 'ammo_trebuchet' || ammoType === 'ammo_barrel';
-          sound.playLaunch(isHeavy);
+          // Set cooldown if a skill ammunition was fired
+          if (p.activeSkillAmmo) {
+            if (p.kingdom.skill1.type === p.activeSkillAmmo) p.skill1Cooldown = p.kingdom.skill1.cooldown;
+            if (p.kingdom.skill2.type === p.activeSkillAmmo) p.skill2Cooldown = p.kingdom.skill2.cooldown;
+          }
 
           const dir = p.side === 0 ? 1 : -1;
+          const angleOffset = ammoType === 'ammo_trebuchet' ? 8 : 0;
           const tierSpeedBonus = p.siegeTier === 1 ? 1.08 : p.siegeTier === 2 ? 1.12 : p.siegeTier === 3 ? 1.16 : 1.0;
-          const baseSpeed = (395 + p.power * 7.85) * p.kingdom.speedMult * tierSpeedBonus;
+          const speedScale = (ammoType === 'ammo_sahi' ? 1.10
+            : ammoType === 'cannon' ? 1.05
+            : ammoType === 'ammo_barrel' ? 0.95
+            : ammoType === 'ammo_grejuva' ? 0.98
+            : ammoType === 'ammo_arrows' ? 1.06
+            : 1.0) * tierSpeedBonus;
 
+          const baseSpd = (395 + p.power * 7.85) * p.kingdom.speedMult * speedScale;
+          const spawnX = p.catapultX + dir * (p.siegeTier >= 2 ? 36 : 24);
+          const spawnY = p.catapultY - (p.siegeTier === 1 ? 48 : p.siegeTier >= 2 ? 32 : 46);
+
+          const tierDmgMult = 1 + (p.siegeTier || 0) * 0.07;
           const mehterMult = p.mehterBuff ? 1.25 : 1.0;
-          const heavyMult = isHeavy ? p.kingdom.heavyDamageMult : 1.0;
-          const tierDmgMult = p.siegeTier === 1 ? 1.10 : p.siegeTier === 2 ? 1.15 : p.siegeTier === 3 ? 1.22 : 1.0;
-          const totalDamageMult = p.powerUpgMult * mehterMult * heavyMult * tierDmgMult;
+          const isHeavy = ['cannon', 'ammo_sahi', 'ammo_trebuchet', 'ammo_barrel'].includes(ammoType);
+          const kingdomHeavyMult = isHeavy ? p.kingdom.heavyDamageMult : 1.0;
+          const totalDmgMult = p.powerUpgMult * mehterMult * kingdomHeavyMult * tierDmgMult;
 
-          if (p.mehterBuff) {
-            p.mehterBuff = false;
-          }
+          p.mehterBuff = false;
+          p.activeSkillAmmo = null;
+          p.recoil = 1.0;
 
-          const startX = p.catapultX + dir * (p.siegeTier >= 2 ? 36 : 24);
-          const startY = p.catapultY - (p.siegeTier === 1 ? 48 : p.siegeTier >= 2 ? 32 : 46);
-
-          const spawnProj = (angleOffsetDeg, speedScale, kind, damage, radius, blastRadius, burnTurns) => {
-            const a = ((p.angle + angleOffsetDeg) * Math.PI) / 180;
-            const spd = baseSpeed * speedScale;
-            this.projectiles.push({
-              side: p.side,
-              kind,
-              x: startX,
-              y: startY,
-              vx: Math.cos(a) * spd * dir,
-              vy: -Math.sin(a) * spd,
-              radius,
-              damage: Math.round(damage * totalDamageMult),
-              blastRadius,
-              burnTurns,
-              windResist: p.kingdom.windResist,
-              pierceRemaining: kind === 'cannon' ? 1 : kind === 'ammo_sahi' ? 1 : 0,
-              trail: []
-            });
+          const specs = {
+            stone:          { count: 1, spread: 0,   radius: 7.0,  dmg: 28, blast: 44, burn: 0 },
+            fireball:       { count: 1, spread: 0,   radius: 8.5,  dmg: 36, blast: 56, burn: 2 },
+            triple:         { count: 3, spread: 4.5, radius: 6.0,  dmg: 18, blast: 36, burn: 0 },
+            cannon:         { count: 1, spread: 0,   radius: 9.5,  dmg: 54, blast: 64, burn: 0 },
+            ammo_sahi:      { count: 1, spread: 0,   radius: 11.5, dmg: 76, blast: 78, burn: 0 },
+            ammo_grejuva:   { count: 1, spread: 0,   radius: 9.0,  dmg: 40, blast: 64, burn: 3 },
+            ammo_trebuchet: { count: 1, spread: 0,   radius: 12.0, dmg: 64, blast: 72, burn: 0 },
+            ammo_neft:      { count: 5, spread: 3.5, radius: 6.5,  dmg: 19, blast: 44, burn: 2 },
+            ammo_arrows:    { count: 7, spread: 2.2, radius: 5.0,  dmg: 14, blast: 30, burn: 2 },
+            ammo_barrel:    { count: 1, spread: 0,   radius: 12.5, dmg: 70, blast: 92, burn: 1 }
           };
 
-          if (ammoType === 'fireball') {
-            spawnProj(0, 1.0, 'fireball', 26, 9, 42, 2);
-          } else if (ammoType === 'triple') {
-            spawnProj(-4.5, 0.96, 'stone', 18, 7, 26, 0);
-            spawnProj(0, 1.0, 'stone', 19, 7, 26, 0);
-            spawnProj(4.5, 1.04, 'stone', 18, 7, 26, 0);
-          } else if (ammoType === 'cannon') {
-            spawnProj(0, 1.05, 'cannon', 44, 11, 44, 0);
-          } else if (ammoType === 'ammo_sahi') {
-            spawnProj(0, 1.10, 'ammo_sahi', 46, 13, 54, 0);
-          } else if (ammoType === 'ammo_grejuva') {
-            spawnProj(0, 0.98, 'ammo_grejuva', 34, 11, 74, 2);
-          } else if (ammoType === 'ammo_trebuchet') {
-            spawnProj(8, 1.02, 'ammo_trebuchet', 52, 15, 64, 0);
-          } else if (ammoType === 'ammo_neft') {
-            for (let i = -2; i <= 2; i++) {
-              spawnProj(i * 3.2, 1 + i * 0.025, 'fireball', 15, 7, 34, 1);
-            }
-          } else if (ammoType === 'ammo_arrows') {
-            for (let i = -3; i <= 3; i++) {
-              spawnProj(i * 2.2, 1.06 + i * 0.018, 'arrow', 12, 5, 22, 1);
-            }
-          } else if (ammoType === 'ammo_barrel') {
-            spawnProj(0, 0.95, 'ammo_barrel', 50, 13, 78, 1);
-          } else {
-            spawnProj(0, 1.0, 'stone', 30, 8, 32, 0);
-          }
+          const spec = specs[ammoType] || specs.stone;
+          for (let i = 0; i < spec.count; i++) {
+            const offsetIdx = i - (spec.count - 1) / 2;
+            const deg = p.angle + angleOffset + offsetIdx * spec.spread;
+            const rad = (deg * Math.PI) / 180;
+            const spdJitter = spec.count > 1 ? (1 + offsetIdx * 0.025) : 1;
 
-          for (let i = 0; i < (p.siegeTier >= 2 ? 22 : 14); i++) {
-            this.particles.push({
-              x: startX,
-              y: startY,
-              vx: (Math.random() - 0.5) * 150 + dir * (p.siegeTier >= 2 ? 105 : 60),
-              vy: (Math.random() - 0.7) * 120,
-              size: (p.siegeTier >= 2 ? 7 : 5) + Math.random() * 7,
-              color: (p.siegeTier >= 2 && i < 6) ? '#f97316' : (isHeavy ? '#94a3b8' : '#e2e8f0'),
-              alpha: 0.85,
-              life: 0.45 + Math.random() * 0.3
+            this.projectiles.push({
+              side: p.side,
+              kind: ammoType,
+              x: spawnX,
+              y: spawnY,
+              vx: Math.cos(rad) * baseSpd * spdJitter * dir,
+              vy: -Math.sin(rad) * baseSpd * spdJitter,
+              radius: spec.radius,
+              damage: Math.round(spec.dmg * totalDmgMult),
+              blastRadius: spec.blast,
+              burnTurns: spec.burn,
+              trail: [{ x: spawnX, y: spawnY }]
             });
           }
 
-          p.activeSkillAmmo = null;
-          if (p.selectedWeapon === 'skill') {
-            p.selectedWeapon = 'stone';
+          sound.playLaunch(isHeavy);
+          this._spawnParticles(spawnX, spawnY, isHeavy ? '#f59e0b' : '#cbd5e1', isHeavy ? 14 : 7, 130);
+          if (isHeavy) {
+            this.shakeTime = 0.16;
+            this.shakeIntensity = 5;
           }
+
+          this.phase = 'projectile';
           onBattleStateUpdated();
         }
 
-        _healCastle(side, amount) {
-          const p = this.players[side];
-          p.hp = Math.min(p.maxHp, p.hp + amount);
-
-          const friendlyBlocks = this.blocks.filter(b => b.side === side && b.hp < b.maxHp);
-          friendlyBlocks.sort((a, b) => (a.hp / a.maxHp) - (b.hp / b.maxHp));
-          for (let i = 0; i < Math.min(4, friendlyBlocks.length); i++) {
-            friendlyBlocks[i].hp = Math.min(friendlyBlocks[i].maxHp, friendlyBlocks[i].hp + 25);
-            friendlyBlocks[i].burnTurns = 0;
-          }
-
-          const castleX = side === 0 ? 220 : this.W - 220;
-          this._spawnFloatingText(castleX, this.groundY - 170, t('floatRepair', amount), '#4ade80');
-          for (let i = 0; i < 16; i++) {
-            this.particles.push({
-              x: castleX + (Math.random() - 0.5) * 160,
-              y: this.groundY - 40 - Math.random() * 120,
-              vx: (Math.random() - 0.5) * 40,
-              vy: -50 - Math.random() * 60,
-              size: 4 + Math.random() * 4,
-              color: '#4ade80',
-              alpha: 0.9,
-              life: 0.7
-            });
-          }
-        }
-
-        update(dt) {
-          if (!this.running || this.paused) return;
-          const clampedDt = Math.min(dt, 0.04);
-          this.animTime += clampedDt;
-
-          for (const c of this.clouds) {
-            c.x += c.speed * clampedDt;
-            if (c.x > this.W + 160) c.x = -160;
-          }
-          for (const b of this.birds) {
-            b.x += b.speed * clampedDt;
-            b.phase += clampedDt * 7;
-            if (b.x > this.W + 60) b.x = -60;
-          }
-
-          if (this.shakeTime > 0) {
-            this.shakeTime = Math.max(0, this.shakeTime - clampedDt);
-          }
-          if (this.sandstormAlpha > 0) {
-            this.sandstormAlpha = Math.max(0, this.sandstormAlpha - clampedDt * 0.08);
-          }
-
-          for (const pl of this.players) {
-            if (pl && pl.recoil > 0) {
-              pl.recoil = Math.max(0, pl.recoil - clampedDt * 2.8);
-            }
-          }
-
-          const gravity = 460;
-          for (let i = this.projectiles.length - 1; i >= 0; i--) {
-            const pr = this.projectiles[i];
-            const windAccel = this.wind * 11.5 * (1 - pr.windResist);
-
-            pr.vx += windAccel * clampedDt;
-            pr.vy += gravity * clampedDt;
-            pr.x += pr.vx * clampedDt;
-            pr.y += pr.vy * clampedDt;
-
-            pr.trail.push({ x: pr.x, y: pr.y });
-            if (pr.trail.length > 14) pr.trail.shift();
-
-            const enemySide = 1 - pr.side;
-            let hitBlock = null;
-            for (const blk of this.blocks) {
-              if (blk.side !== enemySide || blk.hp <= 0) continue;
-              if (
-                pr.x + pr.radius > blk.x &&
-                pr.x - pr.radius < blk.x + blk.w &&
-                pr.y + pr.radius > blk.y &&
-                pr.y - pr.radius < blk.y + blk.h
-              ) {
-                hitBlock = blk;
-                break;
-              }
-            }
-
-            if (hitBlock) {
-              this._detonateProjectile(pr, hitBlock);
-              if (pr.pierceRemaining > 0) {
-                pr.pierceRemaining -= 1;
-                pr.damage = Math.round(pr.damage * 0.55);
-                pr.x += Math.sign(pr.vx) * 28;
-              } else {
-                this.projectiles.splice(i, 1);
-              }
-              continue;
-            }
-
-            if (pr.y + pr.radius >= this.groundY) {
-              pr.y = this.groundY - pr.radius;
-              this._detonateProjectile(pr, null);
-              this.projectiles.splice(i, 1);
-              continue;
-            }
-
-            if (pr.x < -300 || pr.x > this.W + 300 || pr.y > this.H + 200) {
-              this.projectiles.splice(i, 1);
-            }
-          }
-
-          if (this.phase === 'firing' && this.projectiles.length === 0 && !this.gameOver) {
-            this.phase = 'turn_transition';
-            this.phaseTimer = 0.65;
-          }
-
-          if (this.phase === 'turn_transition' && !this.gameOver) {
-            this.phaseTimer -= clampedDt;
-            if (this.phaseTimer <= 0) {
-              this._advanceTurn();
-            }
-          } else if ((this.phase === 'ai_thinking' || (this.phase === 'online_waiting' && onlineMgr.isDemo)) && !this.gameOver) {
-            this.phaseTimer -= clampedDt;
-            if (this.phaseTimer <= 0) {
-              this._executeAITurn();
-            }
-          }
-
-          for (let i = this.particles.length - 1; i >= 0; i--) {
-            const pt = this.particles[i];
-            pt.x += pt.vx * clampedDt;
-            pt.y += pt.vy * clampedDt;
-            pt.vy += 260 * clampedDt;
-            pt.life -= clampedDt;
-            pt.alpha = Math.max(0, pt.life * 1.4);
-            if (pt.life <= 0) {
-              this.particles.splice(i, 1);
-            }
-          }
-
-          for (const blk of this.blocks) {
-            if (blk.burnTurns > 0) {
-              if (Math.random() < 0.45) {
-                this.particles.push({
-                  x: blk.x + 3 + Math.random() * (blk.w - 6),
-                  y: blk.y + Math.random() * 10,
-                  vx: (Math.random() - 0.5) * 24 + this.wind * 1.4,
-                  vy: -48 - Math.random() * 45,
-                  size: 4 + Math.random() * 5,
-                  color: Math.random() > 0.35 ? '#f97316' : '#fde047',
-                  alpha: 0.92,
-                  life: 0.38
-                });
-              }
-              if (Math.random() < 0.22) {
-                this.smokeParticles.push({
-                  x: blk.x + blk.w * 0.5 + (Math.random() - 0.5) * 14,
-                  y: blk.y - 2,
-                  vx: (Math.random() - 0.5) * 18 + this.wind * 2.2,
-                  vy: -38 - Math.random() * 30,
-                  size: 8 + Math.random() * 8,
-                  alpha: 0.48,
-                  life: 1.1 + Math.random() * 0.5,
-                  color: '#292524'
-                });
-              }
-            }
-          }
-
-          for (let i = this.debris.length - 1; i >= 0; i--) {
-            const db = this.debris[i];
-            db.vy += 580 * clampedDt;
-            db.x += db.vx * clampedDt;
-            db.y += db.vy * clampedDt;
-            db.rot += db.vRot * clampedDt;
-            db.life -= clampedDt;
-
-            if (db.y + db.h / 2 >= this.groundY) {
-              db.y = this.groundY - db.h / 2;
-              db.vy = -db.vy * 0.32;
-              db.vx *= 0.65;
-              db.vRot *= 0.5;
-            }
-            if (db.life <= 0) {
-              this.debris.splice(i, 1);
-            }
-          }
-
-          for (let i = this.smokeParticles.length - 1; i >= 0; i--) {
-            const sm = this.smokeParticles[i];
-            sm.x += sm.vx * clampedDt;
-            sm.y += sm.vy * clampedDt;
-            sm.size += 12 * clampedDt;
-            sm.life -= clampedDt;
-            sm.alpha = Math.max(0, sm.life * 0.45);
-            if (sm.life <= 0) {
-              this.smokeParticles.splice(i, 1);
-            }
-          }
-
-          for (let i = this.floatingTexts.length - 1; i >= 0; i--) {
-            const ft = this.floatingTexts[i];
-            ft.y -= 36 * clampedDt;
-            ft.life -= clampedDt;
-            if (ft.life <= 0) {
-              this.floatingTexts.splice(i, 1);
-            }
-          }
-        }
-
-        _detonateProjectile(pr, directBlock) {
-          const enemySide = 1 - pr.side;
-          const defender = this.players[enemySide];
-          const attacker = this.players[pr.side];
-
-          const isFire = pr.burnTurns > 0;
-          const isHeavy = pr.kind === 'cannon' || pr.kind === 'ammo_sahi' || pr.kind === 'ammo_trebuchet' || pr.kind === 'ammo_barrel';
-
-          if (isHeavy || pr.blastRadius >= 70) {
+        _detonateProjectile(pr) {
+          const isBig = pr.blastRadius >= 60;
+          if (isBig) {
             sound.playExplosion();
             this.shakeTime = 0.28;
-            this.shakeIntensity = 7;
+            this.shakeIntensity = 9;
           } else {
-            sound.playImpact(directBlock ? directBlock.mat : 'brick', directBlock && (directBlock.isKeep || directBlock.hasBanner));
-            this.shakeTime = 0.14;
-            this.shakeIntensity = 3.5;
+            sound.playImpact('stone', false);
+            this.shakeTime = 0.12;
+            this.shakeIntensity = 4;
           }
 
-          let totalCastleDamage = 0;
-          let hitKeepOrBanner = false;
-          let goldLooted = 0;
+          const mainColor = pr.kind === 'ammo_grejuva' ? '#22c55e'
+            : pr.burnTurns > 0 ? '#f97316'
+            : isBig ? '#fbbf24'
+            : '#cbd5e1';
+
+          this._spawnParticles(pr.x, pr.y, mainColor, isBig ? 26 : 14, isBig ? 240 : 160);
+          for (let s = 0; s < (isBig ? 7 : 4); s++) {
+            this.smokeParticles.push({
+              x: pr.x + (Math.random() - 0.5) * 24,
+              y: pr.y + (Math.random() - 0.5) * 18,
+              vx: (Math.random() - 0.5) * 28,
+              vy: -22 - Math.random() * 28,
+              alpha: 0.55,
+              color: '#475569',
+              size: 10 + Math.random() * 12,
+              life: 0.9,
+              maxLife: 0.9
+            });
+          }
+
+          const attacker = this.players[pr.side];
+          const enemySide = pr.side === 0 ? 1 : 0;
+          const defender = this.players[enemySide];
+          if (!attacker || !defender) return;
+
+          let totalDealtToEnemy = 0;
+          let hitKeep = false;
+          let destroyedCount = 0;
 
           for (const blk of this.blocks) {
             if (blk.side !== enemySide || blk.hp <= 0) continue;
-
-            const cx = blk.x + blk.w / 2;
-            const cy = blk.y + blk.h / 2;
+            const cx = blk.x + blk.w * 0.5;
+            const cy = blk.y + blk.h * 0.5;
             const dist = Math.hypot(cx - pr.x, cy - pr.y);
 
-            if (blk === directBlock || dist <= pr.blastRadius) {
-              const falloff = blk === directBlock ? 1.0 : Math.max(0.35, 1 - dist / (pr.blastRadius + 15));
+            if (dist <= pr.blastRadius + 22) {
+              const falloff = Math.max(0.35, 1 - dist / (pr.blastRadius + 34));
               let dmg = pr.damage * falloff;
 
-              if (blk.mat === 'wood' && isFire) {
-                dmg *= 1.6;
-              } else if (blk.mat === 'stone') {
-                if (!isHeavy) dmg *= 0.55;
+              if (blk.isKeep) {
+                dmg *= 1.45;
+                hitKeep = true;
+              }
+              if (blk.mat === 'stone') {
                 dmg *= defender.kingdom.stoneArmorMult;
               }
-
-              if (blk.isKeep || blk.hasBanner) {
-                dmg *= 1.45;
-                hitKeepOrBanner = true;
-              }
-
               if (defender.shieldActive) {
                 dmg *= 0.55;
               }
 
               const finalDmg = Math.max(4, Math.round(dmg));
-              blk.hp -= finalDmg;
-              totalCastleDamage += Math.round(finalDmg * 0.50);
-
+              blk.hp = Math.max(0, blk.hp - finalDmg);
               if (pr.burnTurns > 0 && blk.hp > 0) {
                 blk.burnTurns = Math.max(blk.burnTurns, pr.burnTurns);
               }
+              totalDealtToEnemy += finalDmg;
 
-              const shardColor = blk.mat === 'stone' ? '#cbd5e1' : blk.mat === 'wood' ? '#92400e' : '#7c3f26';
-              for (let k = 0; k < 4; k++) {
-                this.debris.push({
-                  x: cx + (Math.random() - 0.5) * 16,
-                  y: cy + (Math.random() - 0.5) * 10,
-                  vx: (Math.random() - 0.5) * 230,
-                  vy: -90 - Math.random() * 170,
-                  w: 6 + Math.random() * 8,
-                  h: 4 + Math.random() * 6,
-                  rot: Math.random() * Math.PI * 2,
-                  vRot: (Math.random() - 0.5) * 14,
-                  color: shardColor,
-                  border: blk.mat === 'stone' ? '#475569' : '#291509',
-                  life: 1.2 + Math.random() * 0.5
-                });
-              }
-
-              if (blk.hp <= 0) {
-                blk.hp = 0;
-                goldLooted += 3;
-                totalCastleDamage += blk.isKeep ? 22 : 6;
-                for (let d = 0; d < 5; d++) {
+              if (blk.hp === 0) {
+                destroyedCount++;
+                for (let d = 0; d < 4; d++) {
                   this.debris.push({
-                    x: blk.x + Math.random() * blk.w,
-                    y: blk.y + Math.random() * blk.h,
-                    vx: (Math.random() - 0.5) * 260,
-                    vy: -120 - Math.random() * 190,
-                    w: 11 + Math.random() * 10,
-                    h: 7 + Math.random() * 7,
-                    rot: Math.random() * Math.PI * 2,
-                    vRot: (Math.random() - 0.5) * 16,
-                    color: shardColor,
-                    border: '#1e1b18',
-                    life: 1.5 + Math.random() * 0.6
-                  });
-                }
-                for (let s = 0; s < 4; s++) {
-                  this.smokeParticles.push({
-                    x: cx + (Math.random() - 0.5) * 24,
+                    x: cx,
                     y: cy,
-                    vx: (Math.random() - 0.5) * 35,
-                    vy: -25 - Math.random() * 35,
-                    size: 12 + Math.random() * 10,
-                    alpha: 0.55,
-                    life: 0.9 + Math.random() * 0.4,
-                    color: '#a8a29e'
+                    vx: (Math.random() - 0.5) * 220,
+                    vy: -120 - Math.random() * 190,
+                    rot: Math.random() * Math.PI,
+                    vrot: (Math.random() - 0.5) * 9,
+                    w: 8 + Math.random() * 7,
+                    h: 5 + Math.random() * 5,
+                    color: blk.mat === 'wood' ? '#784b2a' : blk.mat === 'brick' ? '#9a3412' : '#94a3b8',
+                    border: '#1e1b18',
+                    life: 1.1
                   });
                 }
               }
             }
           }
 
-          this.blocks = this.blocks.filter(b => b.hp > 0);
-          this._settleCollapsedBlocks(enemySide);
+          if (totalDealtToEnemy > 0) {
+            sound.playImpact('brick', hitKeep);
+            const scaledHpLoss = Math.max(5, Math.round(totalDealtToEnemy * 0.44));
+            defender.hp = Math.max(0, defender.hp - scaledHpLoss);
 
-          for (let k = 0; k < 18; k++) {
-            const ang = (Math.PI * 2 * k) / 18;
-            const spd = 40 + Math.random() * 110;
-            this.particles.push({
-              x: pr.x,
-              y: pr.y,
-              vx: Math.cos(ang) * spd,
-              vy: Math.sin(ang) * spd - 30,
-              size: 4 + Math.random() * 6,
-              color: isFire ? '#f97316' : '#e2e8f0',
-              alpha: 0.9,
-              life: 0.4 + Math.random() * 0.25
-            });
+            const remainingBlocks = this.blocks.filter(b => b.side === enemySide && b.hp > 0);
+            if (remainingBlocks.length === 0) {
+              defender.hp = 0;
+            }
+
+            if (hitKeep) {
+              this._spawnFloatingText(pr.x, pr.y - 28, t('floatCrit', scaledHpLoss), '#ffd97d');
+            } else {
+              this._spawnFloatingText(pr.x, pr.y - 24, `-${scaledHpLoss}`, '#fca5a5');
+            }
+
+            const lootGold = Math.min(18, 4 + destroyedCount * 3 + (hitKeep ? 4 : 0));
+            attacker.gold += lootGold;
+            this._spawnFloatingText(attacker.catapultX, attacker.catapultY - 76, t('floatLoot', lootGold), '#fde047');
           }
-
-          if (totalCastleDamage > 0) {
-            defender.hp = Math.max(0, defender.hp - totalCastleDamage);
-            const label = hitKeepOrBanner ? t('floatCrit', totalCastleDamage) : `-${totalCastleDamage}`;
-            this._spawnFloatingText(pr.x, pr.y - 24, label, hitKeepOrBanner ? '#ffd97d' : '#f87171');
-          }
-
-          if (goldLooted > 0) {
-            attacker.gold += goldLooted;
-            this._spawnFloatingText(attacker.catapultX, attacker.catapultY - 105, t('floatLoot', goldLooted), '#fde047');
-          }
-
-          onBattleStateUpdated();
-          this._checkVictoryCondition();
-        }
-
-        _settleCollapsedBlocks(side) {
-          const blockH = 22;
-          const cols = {};
-          for (const b of this.blocks) {
-            if (b.side !== side) continue;
-            if (!cols[b.col]) cols[b.col] = [];
-            cols[b.col].push(b);
-          }
-          Object.values(cols).forEach(colBlocks => {
-            colBlocks.sort((a, b) => b.y - a.y);
-            colBlocks.forEach((b, idx) => {
-              b.row = idx;
-              b.y = this.groundY - (idx + 1) * blockH - (b.isKeep ? 4 : 0);
-            });
-          });
-        }
-
-        _spawnFloatingText(x, y, text, color) {
-          this.floatingTexts.push({
-            x,
-            y,
-            text,
-            color,
-            life: 1.35
-          });
         }
 
         _advanceTurn() {
           if (this.gameOver) return;
 
-          const justFinishedSide = this.turnSide;
-          const otherSide = 1 - justFinishedSide;
-          this.players[otherSide].shieldActive = false;
+          if (this.players[1].hp <= 0) {
+            this.gameOver = true;
+            this.running = false;
+            sound.playFanfare('victory');
+            onBattleStateUpdated();
+            onMatchCompleted(0);
+            return;
+          }
+          if (this.players[0].hp <= 0) {
+            this.gameOver = true;
+            this.running = false;
+            onBattleStateUpdated();
+            onMatchCompleted(1);
+            return;
+          }
 
-          this.turnSide = otherSide;
+          this.turnSide = this.turnSide === 0 ? 1 : 0;
           if (this.turnSide === 0) {
             this.turnCount += 1;
           }
 
-          const activePlayer = this.getActivePlayer();
+          const nextP = this.getActivePlayer();
+          nextP.gold += 6 + (nextP.kingdom.goldBonus || 0);
+          nextP.shieldActive = false;
+          if (nextP.skill1Cooldown > 0) nextP.skill1Cooldown -= 1;
+          if (nextP.skill2Cooldown > 0) nextP.skill2Cooldown -= 1;
 
-          if (activePlayer.skill1Cooldown > 0) activePlayer.skill1Cooldown -= 1;
-          if (activePlayer.skill2Cooldown > 0) activePlayer.skill2Cooldown -= 1;
-
-          const income = 8 + activePlayer.kingdom.goldBonus;
-          activePlayer.gold += income;
-
+          // Process burn damage on active player's burning blocks
           let burnTotal = 0;
           for (const blk of this.blocks) {
-            if (blk.side === this.turnSide && blk.burnTurns > 0 && blk.hp > 0) {
-              blk.hp -= 8;
+            if (blk.side === nextP.side && blk.hp > 0 && blk.burnTurns > 0) {
               blk.burnTurns -= 1;
-              burnTotal += 4;
-              if (blk.hp <= 0) blk.hp = 0;
+              const burnDmg = 7;
+              blk.hp = Math.max(0, blk.hp - burnDmg);
+              burnTotal += burnDmg;
+              this._spawnParticles(blk.x + blk.w * 0.5, blk.y + blk.h * 0.5, '#f97316', 5, 65);
             }
           }
           if (burnTotal > 0) {
-            this.blocks = this.blocks.filter(b => b.hp > 0);
-            this._settleCollapsedBlocks(this.turnSide);
-            activePlayer.hp = Math.max(0, activePlayer.hp - burnTotal);
-            const cx = this.turnSide === 0 ? 220 : this.W - 220;
-            this._spawnFloatingText(cx, this.groundY - 140, t('floatBurn', burnTotal), '#fb923c');
+            const hpBurn = Math.max(3, Math.round(burnTotal * 0.42));
+            nextP.hp = Math.max(0, nextP.hp - hpBurn);
+            this._spawnFloatingText(nextP.catapultX - (nextP.side === 0 ? 180 : -180), this.groundY - 140, t('floatBurn', hpBurn), '#fb923c');
+            if (nextP.hp <= 0) {
+              this.gameOver = true;
+              this.running = false;
+              const winner = nextP.side === 0 ? 1 : 0;
+              if (winner === 0) sound.playFanfare('victory');
+              onBattleStateUpdated();
+              onMatchCompleted(winner);
+              return;
+            }
           }
 
-          if (this.mode !== 'online' || this._canLocalControlTurn()) {
+          if (!(this.mode === 'online' && !onlineMgr.isDemo)) {
+            this._rollWind(true);
+          } else if (onlineMgr.role === 'host') {
             this._rollWind(true);
           }
-
-          onBattleStateUpdated();
-          if (this._checkVictoryCondition()) return;
 
           if ((this.mode === 'campaign' || this.mode === 'quick') && this.turnSide === 1) {
             this.phase = 'ai_thinking';
             this.phaseTimer = 1.05;
-            onBattleStateUpdated();
           } else if (this.mode === 'online') {
-            if (onlineMgr.isDemo && this.turnSide === 1) {
-              this.phase = 'online_waiting';
-              this.phaseTimer = 1.45;
-              onBattleStateUpdated();
-            } else if (!this._canLocalControlTurn()) {
-              this.phase = 'online_waiting';
-              onBattleStateUpdated();
+            if (onlineMgr.isDemo) {
+              if (this.turnSide === 1) {
+                this.phase = 'ai_thinking';
+                this.phaseTimer = 1.1;
+              } else {
+                this.phase = 'aim';
+              }
             } else {
-              this.phase = 'aim';
-              onBattleStateUpdated();
+              const mySide = onlineMgr.role === 'guest' ? 1 : 0;
+              this.phase = this.turnSide === mySide ? 'aim' : 'online_waiting';
             }
           } else {
             this.phase = 'aim';
-            onBattleStateUpdated();
           }
+
+          onBattleStateUpdated();
         }
 
-        _executeAITurn() {
-          if (this.gameOver || this.turnSide !== 1) return;
+        _performAIShot() {
           const ai = this.players[1];
-          if (!ai) return;
+          const target = this.players[0];
+          if (!ai || !target) return;
 
-          ai.activeSkillAmmo = null;
-          ai.selectedWeapon = 'stone';
-
-          const s1 = ai.kingdom.skill1;
-          const s2 = ai.kingdom.skill2;
-
-          // AI upgrades its siege engine in Quick Battle when wealthy
-          const upgCosts = [24, 34, 46];
-          if (this.mode === 'quick' && ai.siegeTier < 3 && ai.gold >= (upgCosts[ai.siegeTier] + 15) && Math.random() < 0.35) {
-            ai.gold -= upgCosts[ai.siegeTier];
-            ai.siegeTier += 1;
-            const tierInfo = t('siegeTiers')[ai.siegeTier];
-            this._spawnFloatingText(ai.catapultX, ai.catapultY - 92, `⚙️ ${tierInfo.short}!`, '#ffd97d');
-          }
-
-          if (s2.type === 'instant_fortify' && ai.skill2Cooldown === 0 && ai.gold >= s2.cost && ai.hp < ai.maxHp * 0.65 && Math.random() < 0.45) {
-            ai.gold -= s2.cost;
-            ai.skill2Cooldown = s2.cooldown;
-            this._healCastle(ai.side, 26);
+          if (ai.hp < ai.maxHp * 0.38 && ai.gold >= 12 && Math.random() < 0.45) {
+            ai.gold -= 12;
+            this._healCastle(ai, 28);
             sound.playFanfare('repair');
-            onBattleStateUpdated();
-            this.phase = 'turn_transition';
-            this.phaseTimer = 0.85;
+            this._spawnFloatingText(ai.catapultX, ai.catapultY - 85, t('floatRepair', 28), '#6ee7b7');
+            this._advanceTurn();
             return;
           }
 
-          if (s2.type === 'instant_shield' && ai.skill2Cooldown === 0 && ai.gold >= s2.cost && ai.hp < ai.maxHp * 0.75 && Math.random() < 0.35) {
-            ai.gold -= s2.cost;
-            ai.skill2Cooldown = s2.cooldown;
-            ai.shieldActive = true;
-            sound.playFanfare('repair');
-            this._spawnFloatingText(ai.catapultX, ai.catapultY - 90, t('floatShield'), '#38bdf8');
-            onBattleStateUpdated();
-            this.phase = 'turn_transition';
-            this.phaseTimer = 0.85;
-            return;
-          }
-
-          if (s1.type === 'buff_mehter' && ai.skill1Cooldown === 0 && !ai.mehterBuff && Math.random() < 0.5) {
-            ai.mehterBuff = true;
-            ai.skill1Cooldown = s1.cooldown;
-            sound.playFanfare('mehter');
-            this._spawnFloatingText(ai.catapultX, ai.catapultY - 85, t('floatMehter'), '#ffd97d');
-          }
-
-          const offensiveSkills = [s1, s2].filter((sk, idx) => {
-            const cd = idx === 0 ? ai.skill1Cooldown : ai.skill2Cooldown;
-            const reqTier = this.getRequiredTierForSkill(sk);
-            return ai.siegeTier >= reqTier && sk.type.startsWith('ammo_') && cd === 0 && ai.gold >= this.getAmmoCost(ai, sk.type);
-          });
-
-          const cannonCost = this.getAmmoCost(ai, 'cannon');
-          if (offensiveSkills.length > 0 && Math.random() < 0.42) {
-            const chosenSkill = offensiveSkills[Math.floor(Math.random() * offensiveSkills.length)];
-            ai.gold -= this.getAmmoCost(ai, chosenSkill.type);
-            if (chosenSkill === s1 && s1.cooldown > 0) ai.skill1Cooldown = s1.cooldown;
-            if (chosenSkill === s2 && s2.cooldown > 0) ai.skill2Cooldown = s2.cooldown;
-            ai.activeSkillAmmo = chosenSkill.type;
-            ai.selectedWeapon = 'skill';
-          } else if (ai.siegeTier >= 2 && ai.gold >= cannonCost && Math.random() < 0.38) {
-            ai.gold -= cannonCost;
+          if ((ai.siegeTier || 0) >= 2 && ai.gold >= 22 && Math.random() < 0.4) {
             ai.selectedWeapon = 'cannon';
-          } else if (ai.gold >= 15 && Math.random() < 0.42) {
-            ai.gold -= 15;
+          } else if (ai.gold >= 15 && Math.random() < 0.35) {
             ai.selectedWeapon = 'triple';
-          } else if (ai.gold >= 10 && Math.random() < 0.42) {
-            ai.gold -= 10;
+          } else if (ai.gold >= 10 && Math.random() < 0.4) {
             ai.selectedWeapon = 'fireball';
           } else {
             ai.selectedWeapon = 'stone';
           }
 
-          const targetX = 218 + (Math.random() - 0.5) * 95;
-          const targetY = this.groundY - 85;
-          const angleOffset = ai.activeSkillAmmo === 'ammo_trebuchet' ? 8 : 0;
-          const speedScale = ai.activeSkillAmmo === 'ammo_sahi' ? 1.10
-            : ai.selectedWeapon === 'cannon' ? 1.05
-            : ai.activeSkillAmmo === 'ammo_barrel' ? 0.95
-            : 1.0;
+          const targetX = target.catapultX - 185 + (Math.random() - 0.5) * 40;
+          const dx = Math.abs(ai.catapultX - targetX);
+          const angleDeg = 42 + Math.round(Math.random() * 14);
+          const rad = (angleDeg * Math.PI) / 180;
+          const g = 460;
+          const windComp = this.wind * 11.5 * (1 - ai.kingdom.windResist) * 0.72;
+          const reqSpd = Math.sqrt(Math.max(180000, (dx * g) / Math.sin(2 * rad))) + windComp;
+          const tierSpeedBonus = ai.siegeTier === 1 ? 1.08 : ai.siegeTier === 2 ? 1.12 : ai.siegeTier === 3 ? 1.16 : 1.0;
 
-          let bestAngle = 48;
-          let bestPower = 76;
-          let bestError = Infinity;
+          let calcPower = ((reqSpd / (ai.kingdom.speedMult * tierSpeedBonus)) - 395) / 7.85;
+          const jitter = this.aiDifficulty === 'easy' ? 11 : this.aiDifficulty === 'normal' ? 5.5 : 2.2;
+          calcPower += (Math.random() - 0.5) * 2 * jitter;
 
-          for (let testAngle = 30; testAngle <= 68; testAngle += 3) {
-            for (let testPower = 48; testPower <= 100; testPower += 3) {
-              const landX = this._simulateLandingX(1, testAngle + angleOffset, testPower, speedScale, targetY);
-              const err = Math.abs(landX - targetX);
-              if (err < bestError) {
-                bestError = err;
-                bestAngle = testAngle;
-                bestPower = testPower;
+          ai.angle = Math.max(25, Math.min(72, angleDeg));
+          ai.power = Math.max(35, Math.min(100, Math.round(calcPower)));
+
+          this.phase = 'aim';
+          this.fireCurrentShot();
+        }
+
+        _spawnFloatingText(x, y, text, color = '#ffd97d') {
+          this.floatingTexts.push({ x, y, vy: -34, text, color, life: 1.5 });
+        }
+
+        _spawnParticles(x, y, color, count = 12, speed = 150) {
+          for (let i = 0; i < count; i++) {
+            const ang = Math.random() * Math.PI * 2;
+            const spd = 25 + Math.random() * speed;
+            this.particles.push({
+              x,
+              y,
+              vx: Math.cos(ang) * spd,
+              vy: Math.sin(ang) * spd - 40,
+              alpha: 1,
+              color,
+              size: 2.5 + Math.random() * 3.5,
+              life: 0.55 + Math.random() * 0.35,
+              maxLife: 0.9
+            });
+          }
+        }
+
+        update(dt) {
+          this.animTime += dt;
+
+          for (const cl of this.clouds) {
+            cl.x += (cl.speed + this.wind * 1.4) * dt;
+            if (cl.x > this.W + 140) cl.x = -140;
+            if (cl.x < -140) cl.x = this.W + 140;
+          }
+          for (const bd of this.birds) {
+            bd.x += bd.speed * dt;
+            bd.phase += dt * 7;
+            if (bd.x > this.W + 80) bd.x = -80;
+          }
+
+          if (!this.running || this.paused) return;
+
+          if (this.shakeTime > 0) {
+            this.shakeTime = Math.max(0, this.shakeTime - dt);
+          }
+          if (this.sandstormAlpha > 0) {
+            this.sandstormAlpha = Math.max(0, this.sandstormAlpha - dt * 0.12);
+          }
+
+          for (const p of this.players) {
+            if (p && p.recoil > 0) {
+              p.recoil = Math.max(0, p.recoil - dt * 2.8);
+            }
+          }
+
+          if (this.phase === 'ai_thinking' && !this.gameOver) {
+            this.phaseTimer -= dt;
+            if (this.phaseTimer <= 0) {
+              this._performAIShot();
+            }
+          }
+
+          if (this.phase === 'projectile') {
+            const activeP = this.getActivePlayer();
+            const windAccel = this.wind * 11.5 * (1 - (activeP?.kingdom.windResist || 0));
+
+            for (let i = this.projectiles.length - 1; i >= 0; i--) {
+              const pr = this.projectiles[i];
+              pr.vx += windAccel * dt;
+              pr.vy += 460 * dt;
+              pr.x += pr.vx * dt;
+              pr.y += pr.vy * dt;
+
+              pr.trail.push({ x: pr.x, y: pr.y });
+              if (pr.trail.length > 18) pr.trail.shift();
+
+              const enemySide = pr.side === 0 ? 1 : 0;
+              let hitBlock = false;
+              for (const blk of this.blocks) {
+                if (blk.side !== enemySide || blk.hp <= 0) continue;
+                if (
+                  pr.x + pr.radius >= blk.x &&
+                  pr.x - pr.radius <= blk.x + blk.w &&
+                  pr.y + pr.radius >= blk.y &&
+                  pr.y - pr.radius <= blk.y + blk.h
+                ) {
+                  hitBlock = true;
+                  break;
+                }
+              }
+
+              if (hitBlock || pr.y >= this.groundY || pr.x < -120 || pr.x > this.W + 120) {
+                if (pr.y >= this.groundY) pr.y = this.groundY;
+                this._detonateProjectile(pr);
+                this.projectiles.splice(i, 1);
               }
             }
-          }
 
-          const spread = this.aiDifficulty === 'easy' ? 7.5 : this.aiDifficulty === 'normal' ? 3.8 : 1.4;
-          ai.angle = Math.max(20, Math.min(78, Math.round(bestAngle + (Math.random() - 0.5) * spread)));
-          ai.power = Math.max(30, Math.min(100, Math.round(bestPower + (Math.random() - 0.5) * spread)));
-
-          onBattleStateUpdated();
-          this.fireCurrentShot({
-            angle: ai.angle,
-            power: ai.power,
-            weapon: ai.selectedWeapon,
-            skillAmmo: ai.activeSkillAmmo
-          });
-        }
-
-        _simulateLandingX(side, angle, power, speedScale, targetY) {
-          const p = this.players[side];
-          const dir = side === 0 ? 1 : -1;
-          const rad = (angle * Math.PI) / 180;
-          const tierSpeedBonus = p.siegeTier === 1 ? 1.08 : p.siegeTier === 2 ? 1.12 : p.siegeTier === 3 ? 1.16 : 1.0;
-          const spd = (395 + power * 7.85) * p.kingdom.speedMult * tierSpeedBonus * speedScale;
-          let x = p.catapultX + dir * (p.siegeTier >= 2 ? 36 : 24);
-          let y = p.catapultY - (p.siegeTier === 1 ? 48 : p.siegeTier >= 2 ? 32 : 46);
-          let vx = Math.cos(rad) * spd * dir;
-          let vy = -Math.sin(rad) * spd;
-          const dt = 0.04;
-          const windAccel = this.wind * 11.5 * (1 - p.kingdom.windResist);
-
-          for (let step = 0; step < 220; step++) {
-            vx += windAccel * dt;
-            vy += 460 * dt;
-            x += vx * dt;
-            y += vy * dt;
-            if (y >= targetY && vy > 0) return x;
-          }
-          return x;
-        }
-
-        _checkVictoryCondition() {
-          if (this.gameOver) return true;
-          const p0Dead = this.players[0].hp <= 0;
-          const p1Dead = this.players[1].hp <= 0;
-
-          if (p0Dead || p1Dead) {
-            this.gameOver = true;
-            this.phase = 'victory';
-            const winnerSide = p1Dead ? 0 : 1;
-
-            if (winnerSide === 0) {
-              sound.playFanfare('victory');
-            } else {
-              sound.playExplosion();
+            if (this.projectiles.length === 0 && !this.gameOver) {
+              this._advanceTurn();
             }
-
-            onMatchCompleted(winnerSide);
-            return true;
           }
-          return false;
+
+          for (let i = this.particles.length - 1; i >= 0; i--) {
+            const pt = this.particles[i];
+            pt.vy += 320 * dt;
+            pt.x += pt.vx * dt;
+            pt.y += pt.vy * dt;
+            pt.life -= dt;
+            pt.alpha = Math.max(0, pt.life / pt.maxLife);
+            if (pt.life <= 0) this.particles.splice(i, 1);
+          }
+
+          for (let i = this.debris.length - 1; i >= 0; i--) {
+            const db = this.debris[i];
+            db.vy += 520 * dt;
+            db.x += db.vx * dt;
+            db.y += db.vy * dt;
+            db.rot += db.vrot * dt;
+            db.life -= dt;
+            if (db.y >= this.groundY) {
+              db.y = this.groundY;
+              db.vy *= -0.35;
+              db.vx *= 0.7;
+            }
+            if (db.life <= 0) this.debris.splice(i, 1);
+          }
+
+          for (let i = this.smokeParticles.length - 1; i >= 0; i--) {
+            const sm = this.smokeParticles[i];
+            sm.x += sm.vx * dt;
+            sm.y += sm.vy * dt;
+            sm.size += 12 * dt;
+            sm.life -= dt;
+            sm.alpha = Math.max(0, (sm.life / sm.maxLife) * 0.55);
+            if (sm.life <= 0) this.smokeParticles.splice(i, 1);
+          }
+
+          for (let i = this.floatingTexts.length - 1; i >= 0; i--) {
+            const ft = this.floatingTexts[i];
+            ft.y += ft.vy * dt;
+            ft.life -= dt;
+            if (ft.life <= 0) this.floatingTexts.splice(i, 1);
+          }
         }
 
         render() {
-          const ctx = this.ctx;
-          const rect = this.canvas.getBoundingClientRect();
-          if (rect.width === 0 || rect.height === 0) return;
-
-          const dpr = Math.min(window.devicePixelRatio || 1, 2);
-          const targetW = Math.floor(rect.width * dpr);
-          const targetH = Math.floor(rect.height * dpr);
-
-          if (this.canvas.width !== targetW || this.canvas.height !== targetH) {
-            this.canvas.width = targetW;
-            this.canvas.height = targetH;
+          const parent = this.canvas.parentElement;
+          if (parent) {
+            const dpr = Math.min(window.devicePixelRatio || 1, 2);
+            const targetW = Math.max(1, Math.floor(parent.clientWidth * dpr));
+            const targetH = Math.max(1, Math.floor(parent.clientHeight * dpr));
+            if (this.canvas.width !== targetW || this.canvas.height !== targetH) {
+              this.canvas.width = targetW;
+              this.canvas.height = targetH;
+            }
           }
 
-          ctx.save();
-          const aspect = this.canvas.width / this.canvas.height;
+          const ctx = this.ctx;
+          const cw = this.canvas.width;
+          const ch = this.canvas.height;
+          ctx.clearRect(0, 0, cw, ch);
+
+          const aspect = cw / Math.max(1, ch);
           const skyCrop = aspect > 2.3 ? Math.min(225, (aspect - 2.3) * 115) : 0;
           const effectiveH = this.H - skyCrop;
 
-          const scaleX = this.canvas.width / this.W;
-          const scaleY = this.canvas.height / effectiveH;
+          const scaleX = cw / this.W;
+          const scaleY = ch / effectiveH;
           const scale = Math.min(scaleX, scaleY);
-          const offsetX = (this.canvas.width - this.W * scale) / 2;
-          const offsetY = (this.canvas.height - effectiveH * scale) / 2 - skyCrop * scale;
+          const offsetX = (cw - this.W * scale) / 2;
+          const offsetY = (ch - effectiveH * scale) / 2 - skyCrop * scale;
 
-          ctx.fillStyle = '#5a3d28';
-          ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+          ctx.save();
+          if (this.shakeTime > 0) {
+            const sx = (Math.random() - 0.5) * 2 * this.shakeIntensity;
+            const sy = (Math.random() - 0.5) * 2 * this.shakeIntensity;
+            ctx.translate(sx, sy);
+          }
+
+          this._renderSkyBackdrop(ctx, cw, ch);
 
           ctx.translate(offsetX, offsetY);
           ctx.scale(scale, scale);
 
-          const extraLeft = offsetX / scale;
-          const extraRight = (this.canvas.width - (offsetX + this.W * scale)) / scale;
-          if (extraLeft > 0 || extraRight > 0) {
-            const extGrad = ctx.createLinearGradient(0, -120, 0, this.groundY);
-            extGrad.addColorStop(0, '#3b4f68');
-            extGrad.addColorStop(0.55, '#8ca4b5');
-            extGrad.addColorStop(1, '#dfc9a4');
-            ctx.fillStyle = extGrad;
-            if (extraLeft > 0) ctx.fillRect(-extraLeft - 20, -250, extraLeft + 30, this.groundY + 250);
-            if (extraRight > 0) ctx.fillRect(this.W - 10, -250, extraRight + 30, this.groundY + 250);
-
-            ctx.fillStyle = this.skyTheme === 'desert' ? '#c2a366' : '#539434';
-            if (extraLeft > 0) ctx.fillRect(-extraLeft - 20, this.groundY, extraLeft + 30, 11);
-            if (extraRight > 0) ctx.fillRect(this.W - 10, this.groundY, extraRight + 30, 11);
-
-            ctx.fillStyle = '#5a3d28';
-            if (extraLeft > 0) ctx.fillRect(-extraLeft - 20, this.groundY + 11, extraLeft + 30, 260);
-            if (extraRight > 0) ctx.fillRect(this.W - 10, this.groundY + 11, extraRight + 30, 260);
+          this._renderMountainsAndTerrain(ctx);
+          this._renderCastles(ctx);
+          this._renderCatapults(ctx);
+          if (this.phase === 'aim' && this._canLocalControlTurn()) {
+            this._renderAimTrajectory(ctx);
           }
-
-          if (this.shakeTime > 0) {
-            const sx = (Math.random() - 0.5) * this.shakeIntensity * 2;
-            const sy = (Math.random() - 0.5) * this.shakeIntensity * 2;
-            ctx.translate(sx, sy);
-          }
-
-          this._renderAtmosphere(ctx);
-          this._renderHillsAndMountains(ctx);
-          this._renderGround(ctx);
-
-          if (this.players[0] && this.players[1]) {
-            this._renderCastles(ctx);
-            this._renderCatapults(ctx);
-
-            if (this.phase === 'aim' && !this.gameOver && this._canLocalControlTurn()) {
-              this._renderAimTrajectory(ctx);
-            }
-          }
-
           this._renderProjectiles(ctx);
           this._renderParticlesAndPopups(ctx);
 
           if (this.sandstormAlpha > 0) {
-            ctx.fillStyle = `rgba(217, 155, 67, ${this.sandstormAlpha})`;
-            ctx.fillRect(-200, -100, this.W + 400, this.H + 200);
+            ctx.fillStyle = `rgba(217, 155, 68, ${this.sandstormAlpha})`;
+            ctx.fillRect(-200, 0, this.W + 400, this.H + 200);
           }
 
           ctx.restore();
         }
 
-        _renderAtmosphere(ctx) {
+        _renderSkyBackdrop(ctx, cw, ch) {
           const palettes = {
-            day: ['#4a6b8c', '#9db5c4', '#e8d5b5'],
-            dusk: ['#3b2d54', '#9c5263', '#f2a65a'],
-            desert: ['#5d7c94', '#cfa972', '#f0cf95'],
-            overcast: ['#334155', '#64748b', '#94a3b8'],
-            crimson: ['#2d0f2b', '#7c1d3d', '#d97706'],
-            imperial: ['#141b2d', '#2e3f5b', '#b88655']
+            day:      ['#1e3a8a', '#3b82f6', '#bae6fd'],
+            dusk:     ['#311042', '#9d174d', '#fdba74'],
+            desert:   ['#7c2d12', '#d97706', '#fef08a'],
+            overcast: ['#1e293b', '#475569', '#94a3b8'],
+            crimson:  ['#450a0a', '#991b1b', '#fca5a5'],
+            imperial: ['#1e1b4b', '#4338ca', '#fde68a']
           };
-          const pal = palettes[this.skyTheme] || palettes.day;
+          const cols = palettes[this.skyTheme] || palettes.day;
+          const skyGrad = ctx.createLinearGradient(0, 0, 0, ch);
+          skyGrad.addColorStop(0, cols[0]);
+          skyGrad.addColorStop(0.58, cols[1]);
+          skyGrad.addColorStop(1, cols[2]);
+          ctx.fillStyle = skyGrad;
+          ctx.fillRect(0, 0, cw, ch);
+        }
 
-          const grad = ctx.createLinearGradient(0, -120, 0, this.groundY);
-          grad.addColorStop(0, pal[0]);
-          grad.addColorStop(0.55, pal[1]);
-          grad.addColorStop(1, pal[2]);
-          ctx.fillStyle = grad;
-          ctx.fillRect(-300, -200, this.W + 600, this.groundY + 200);
-
-          const sunGlow = ctx.createRadialGradient(1035, 165, 12, 1035, 165, 95);
-          sunGlow.addColorStop(0, 'rgba(255, 248, 214, 0.95)');
-          sunGlow.addColorStop(0.4, 'rgba(251, 191, 36, 0.35)');
-          sunGlow.addColorStop(1, 'rgba(251, 191, 36, 0)');
-          ctx.fillStyle = sunGlow;
+        _renderMountainsAndTerrain(ctx) {
+          ctx.save();
+          const sunGrad = ctx.createRadialGradient(this.W * 0.52, 165, 8, this.W * 0.52, 165, 95);
+          sunGrad.addColorStop(0, 'rgba(255, 251, 214, 0.95)');
+          sunGrad.addColorStop(0.4, 'rgba(253, 224, 71, 0.35)');
+          sunGrad.addColorStop(1, 'rgba(253, 224, 71, 0)');
+          ctx.fillStyle = sunGrad;
           ctx.beginPath();
-          ctx.arc(1035, 165, 95, 0, Math.PI * 2);
+          ctx.arc(this.W * 0.52, 165, 95, 0, Math.PI * 2);
           ctx.fill();
+          ctx.restore();
 
-          ctx.fillStyle = 'rgba(254, 243, 199, 0.85)';
-          ctx.beginPath();
-          ctx.arc(1035, 165, 30, 0, Math.PI * 2);
-          ctx.fill();
-
-          for (const c of this.clouds) {
-            ctx.save();
-            ctx.translate(c.x, c.y);
-            ctx.scale(c.scale, c.scale);
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.55)';
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.24)';
+          for (const cl of this.clouds) {
             ctx.beginPath();
-            ctx.ellipse(0, 0, 62, 16, 0, 0, Math.PI * 2);
+            ctx.arc(cl.x, cl.y, 26 * cl.scale, 0, Math.PI * 2);
+            ctx.arc(cl.x + 22 * cl.scale, cl.y - 6 * cl.scale, 22 * cl.scale, 0, Math.PI * 2);
+            ctx.arc(cl.x - 22 * cl.scale, cl.y - 3 * cl.scale, 19 * cl.scale, 0, Math.PI * 2);
             ctx.fill();
-            ctx.fillStyle = 'rgba(226, 232, 240, 0.45)';
-            ctx.beginPath();
-            ctx.ellipse(4, 7, 54, 10, 0, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.restore();
           }
 
-          ctx.strokeStyle = 'rgba(51, 65, 85, 0.65)';
-          ctx.lineWidth = 1.8;
-          for (const b of this.birds) {
-            const flap = Math.sin(b.phase) * 4;
+          ctx.strokeStyle = 'rgba(15, 23, 42, 0.45)';
+          ctx.lineWidth = 2;
+          for (const bd of this.birds) {
+            const flap = Math.sin(bd.phase) * 4;
             ctx.beginPath();
-            ctx.moveTo(b.x - 7, b.y - flap);
-            ctx.quadraticCurveTo(b.x - 3, b.y - 4, b.x, b.y);
-            ctx.quadraticCurveTo(b.x + 3, b.y - 4, b.x + 7, b.y - flap);
+            ctx.moveTo(bd.x - 7, bd.y + flap);
+            ctx.quadraticCurveTo(bd.x - 3, bd.y - 4, bd.x, bd.y);
+            ctx.quadraticCurveTo(bd.x + 3, bd.y - 4, bd.x + 7, bd.y + flap);
             ctx.stroke();
           }
-        }
 
-        _renderHillsAndMountains(ctx) {
-          ctx.fillStyle = '#7c8ea8';
+          ctx.fillStyle = this.skyTheme === 'desert' ? 'rgba(120, 53, 15, 0.35)' : 'rgba(30, 41, 59, 0.38)';
           ctx.beginPath();
           ctx.moveTo(-250, this.groundY);
-          ctx.lineTo(-250, 390);
-          ctx.quadraticCurveTo(180, 310, 460, 410);
-          ctx.quadraticCurveTo(680, 320, 910, 405);
-          ctx.quadraticCurveTo(1160, 260, 1420, 385);
-          ctx.lineTo(1700, 360);
-          ctx.lineTo(1700, this.groundY);
+          ctx.lineTo(120, 390);
+          ctx.lineTo(390, 470);
+          ctx.lineTo(720, 355);
+          ctx.lineTo(1040, 455);
+          ctx.lineTo(1380, 375);
+          ctx.lineTo(1920, this.groundY);
           ctx.closePath();
           ctx.fill();
 
-          ctx.fillStyle = '#687b96';
+          ctx.fillStyle = this.skyTheme === 'desert' ? 'rgba(146, 64, 14, 0.5)' : 'rgba(20, 83, 45, 0.45)';
           ctx.beginPath();
           ctx.moveTo(-250, this.groundY);
-          ctx.lineTo(-250, 430);
-          ctx.quadraticCurveTo(260, 375, 580, 450);
-          ctx.quadraticCurveTo(960, 360, 1340, 440);
-          ctx.lineTo(1700, 420);
-          ctx.lineTo(1700, this.groundY);
+          ctx.quadraticCurveTo(320, 465, 840, 520);
+          ctx.quadraticCurveTo(1360, 460, 1920, this.groundY);
           ctx.closePath();
           ctx.fill();
 
-          ctx.fillStyle = this.skyTheme === 'desert' ? '#b89b64' : '#65844a';
-          ctx.beginPath();
-          ctx.moveTo(-250, this.groundY);
-          ctx.lineTo(-250, 495);
-          ctx.quadraticCurveTo(210, 465, 520, 505);
-          ctx.quadraticCurveTo(820, 468, 1140, 505);
-          ctx.quadraticCurveTo(1400, 475, 1700, 495);
-          ctx.lineTo(1700, this.groundY);
-          ctx.closePath();
-          ctx.fill();
-
-          const treeXs = [75, 110, 535, 565, 600, 745, 780, 910, 945, 1330, 1370];
-          ctx.fillStyle = this.skyTheme === 'desert' ? '#5c7a3e' : '#3d5e2a';
-          for (const tx of treeXs) {
-            const ty = 492 + ((tx * 7) % 14);
-            ctx.beginPath();
-            ctx.moveTo(tx, ty - 22);
-            ctx.lineTo(tx - 8, ty);
-            ctx.lineTo(tx + 8, ty);
-            ctx.closePath();
-            ctx.fill();
+          const groundGrad = ctx.createLinearGradient(0, this.groundY, 0, this.H + 140);
+          if (this.skyTheme === 'desert') {
+            groundGrad.addColorStop(0, '#d97706');
+            groundGrad.addColorStop(0.14, '#92400e');
+            groundGrad.addColorStop(1, '#451a03');
+          } else {
+            groundGrad.addColorStop(0, '#3f6212');
+            groundGrad.addColorStop(0.14, '#5c3a21');
+            groundGrad.addColorStop(1, '#291509');
           }
+          ctx.fillStyle = groundGrad;
+          ctx.fillRect(-300, this.groundY, this.W + 600, this.H - this.groundY + 160);
 
-          const houseXs = [95, 505, 765, 895, 1350];
-          for (const hx of houseXs) {
-            const hy = 496;
-            ctx.fillStyle = '#cbd5e1';
-            ctx.fillRect(hx - 7, hy - 8, 14, 8);
-            ctx.fillStyle = '#991b1b';
+          ctx.fillStyle = this.skyTheme === 'desert' ? '#fbbf24' : '#65a30d';
+          ctx.fillRect(-300, this.groundY - 2, this.W + 600, 6);
+
+          ctx.fillStyle = 'rgba(0, 0, 0, 0.22)';
+          for (const pb of this.groundPebbles) {
             ctx.beginPath();
-            ctx.moveTo(hx - 9, hy - 8);
-            ctx.lineTo(hx, hy - 14);
-            ctx.lineTo(hx + 9, hy - 8);
-            ctx.closePath();
-            ctx.fill();
-          }
-        }
-
-        _renderGround(ctx) {
-          ctx.fillStyle = this.skyTheme === 'desert' ? '#c2a366' : '#539434';
-          ctx.fillRect(-300, this.groundY, this.W + 600, 11);
-
-          ctx.fillStyle = '#68482f';
-          ctx.fillRect(-300, this.groundY + 11, this.W + 600, 220);
-
-          ctx.fillStyle = '#523722';
-          for (const p of this.groundPebbles) {
-            ctx.beginPath();
-            ctx.ellipse(p.x, p.y, p.rx, p.ry, 0, 0, Math.PI * 2);
+            ctx.ellipse(pb.x, pb.y, pb.rx, pb.ry, 0, 0, Math.PI * 2);
             ctx.fill();
           }
         }
@@ -4054,89 +3694,21 @@
             const depthX = side === 0 ? 16 : -16;
             const depthY = -11;
 
-            const shadowGrad = ctx.createRadialGradient(castleCenterX + depthX * 0.4, this.groundY + 4, 20, castleCenterX + depthX * 0.4, this.groundY + 4, 165);
-            shadowGrad.addColorStop(0, 'rgba(0, 0, 0, 0.55)');
+            const shadowGrad = ctx.createRadialGradient(castleCenterX + depthX * 0.4, this.groundY + 4, 20, castleCenterX + depthX * 0.4, this.groundY + 4, 175);
+            shadowGrad.addColorStop(0, 'rgba(0, 0, 0, 0.58)');
             shadowGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
             ctx.fillStyle = shadowGrad;
             ctx.beginPath();
-            ctx.ellipse(castleCenterX + depthX * 0.4, this.groundY + 5, 165, 15, 0, 0, Math.PI * 2);
+            ctx.ellipse(castleCenterX + depthX * 0.4, this.groundY + 5, 175, 16, 0, 0, Math.PI * 2);
             ctx.fill();
 
-            // Multi-tiered Stone Foundation Plinth
+            // Kingdom-Specific Foundation Plinth & Surrounding Landmarks
             const plinthX = castleStartX - 14;
             const plinthW = 6 * 36 + 28;
             const plinthY = this.groundY - 11;
             const plinthH = 12;
 
-            ctx.fillStyle = '#64748b';
-            ctx.beginPath();
-            ctx.moveTo(plinthX, plinthY);
-            ctx.lineTo(plinthX + depthX, plinthY + depthY);
-            ctx.lineTo(plinthX + plinthW + depthX, plinthY + depthY);
-            ctx.lineTo(plinthX + plinthW, plinthY);
-            ctx.closePath();
-            ctx.fill();
-
-            const pSideX = side === 0 ? plinthX + plinthW : plinthX;
-            ctx.fillStyle = '#1e293b';
-            ctx.beginPath();
-            ctx.moveTo(pSideX, plinthY);
-            ctx.lineTo(pSideX + depthX, plinthY + depthY);
-            ctx.lineTo(pSideX + depthX, plinthY + plinthH + depthY);
-            ctx.lineTo(pSideX, plinthY + plinthH);
-            ctx.closePath();
-            ctx.fill();
-
-            const plinthGrad = ctx.createLinearGradient(plinthX, plinthY, plinthX, plinthY + plinthH);
-            plinthGrad.addColorStop(0, '#64748b');
-            plinthGrad.addColorStop(0.5, '#475569');
-            plinthGrad.addColorStop(1, '#1e293b');
-            ctx.fillStyle = plinthGrad;
-            ctx.fillRect(plinthX, plinthY, plinthW, plinthH);
-
-            ctx.strokeStyle = '#0f172a';
-            ctx.lineWidth = 1;
-            ctx.strokeRect(plinthX, plinthY, plinthW, plinthH);
-            for (let sx = plinthX + 18; sx < plinthX + plinthW; sx += 18) {
-              ctx.beginPath();
-              ctx.moveTo(sx, plinthY);
-              ctx.lineTo(sx, plinthY + plinthH);
-              ctx.stroke();
-            }
-            ctx.fillStyle = 'rgba(34, 84, 38, 0.45)';
-            ctx.fillRect(plinthX, this.groundY - 3, plinthW, 3);
-
-            // Sloped defensive stone talus buttresses
-            ctx.fillStyle = '#334155';
-            ctx.beginPath();
-            ctx.moveTo(plinthX, plinthY);
-            ctx.lineTo(plinthX - 10, this.groundY + 1);
-            ctx.lineTo(plinthX, this.groundY + 1);
-            ctx.closePath();
-            ctx.fill();
-            ctx.beginPath();
-            ctx.moveTo(plinthX + plinthW, plinthY);
-            ctx.lineTo(plinthX + plinthW + 10, this.groundY + 1);
-            ctx.lineTo(plinthX + plinthW, this.groundY + 1);
-            ctx.closePath();
-            ctx.fill();
-
-            // Mongol spiked wooden palisade stakes
-            if (k.id === 'mogol') {
-              const stakeStart = side === 0 ? plinthX + plinthW + 4 : plinthX - 26;
-              for (let s = 0; s < 5; s++) {
-                const sx = stakeStart + s * 5;
-                ctx.strokeStyle = '#451a03';
-                ctx.lineWidth = 3;
-                ctx.beginPath();
-                ctx.moveTo(sx, this.groundY + 1);
-                ctx.lineTo(sx + (side === 0 ? 8 : -8), this.groundY - 21 - (s % 2) * 5);
-                ctx.stroke();
-                ctx.strokeStyle = '#92400e';
-                ctx.lineWidth = 1.2;
-                ctx.stroke();
-              }
-            }
+            this._renderKingdomBaseDetails(ctx, side, k, plinthX, plinthW, plinthY, plinthH, depthX, depthY);
 
             if (player.shieldActive) {
               ctx.save();
@@ -4168,12 +3740,12 @@
               let frontTop = '#9c6644', frontBot = '#6f4528', topFace = '#b07d56', sideFace = '#432818', edgeCol = '#2b190e';
               if (k.id === 'osmanli') {
                 if (blk.mat === 'stone') {
-                  frontTop = '#e5e0d8'; frontBot = '#a8a29e'; topFace = '#f5f5f4'; sideFace = '#78716c'; edgeCol = '#44403c';
+                  frontTop = '#f1ece4'; frontBot = '#b8afa3'; topFace = '#faf8f5'; sideFace = '#78716c'; edgeCol = '#44403c';
                 } else {
                   const isCrimsonRow = blk.row % 2 === 0;
-                  frontTop = isCrimsonRow ? '#9b2226' : '#dfd3c3';
-                  frontBot = isCrimsonRow ? '#6b1417' : '#b5a48e';
-                  topFace = isCrimsonRow ? '#bb3e03' : '#f0e7db';
+                  frontTop = isCrimsonRow ? '#a82024' : '#e8dec8';
+                  frontBot = isCrimsonRow ? '#731215' : '#bfb096';
+                  topFace = isCrimsonRow ? '#c83e37' : '#f5efe2';
                   sideFace = '#4a0e10';
                   edgeCol = '#291509';
                 }
@@ -4196,12 +3768,12 @@
                 }
               } else if (k.id === 'memluk') {
                 if (blk.mat === 'stone') {
-                  frontTop = '#f3d59b'; frontBot = '#c6934b'; topFace = '#fae5bc'; sideFace = '#85581d'; edgeCol = '#452908';
+                  frontTop = '#f6d89e'; frontBot = '#c99349'; topFace = '#fce8be'; sideFace = '#85581d'; edgeCol = '#452908';
                 } else {
                   const isOchre = blk.row % 2 === 1;
-                  frontTop = isOchre ? '#a44a1f' : '#e6ccb2';
-                  frontBot = isOchre ? '#753111' : '#b89b7e';
-                  topFace = '#f2dec9';
+                  frontTop = isOchre ? '#b34b1e' : '#edd5b4';
+                  frontBot = isOchre ? '#7c3010' : '#bfa07a';
+                  topFace = '#f7e5cc';
                   sideFace = '#4a1d08';
                   edgeCol = '#2b1508';
                 }
@@ -4209,7 +3781,7 @@
                 if (blk.mat === 'stone') {
                   frontTop = '#78716c'; frontBot = '#44403c'; topFace = '#a8a29e'; sideFace = '#292524'; edgeCol = '#1c1917';
                 } else {
-                  frontTop = '#7c4a21'; frontBot = '#4a2910'; topFace = '#9c6231'; sideFace = '#2e1807'; edgeCol = '#1a0d03';
+                  frontTop = '#854d22'; frontBot = '#4a2910'; topFace = '#a36531'; sideFace = '#2e1807'; edgeCol = '#1a0d03';
                 }
               }
 
@@ -4246,7 +3818,7 @@
               ctx.fillStyle = fGrad;
               ctx.fillRect(blk.x, blk.y, blk.w, blk.h);
 
-              // Top specular highlight & mortar joints
+              // Top specular highlight
               ctx.fillStyle = 'rgba(255, 255, 255, 0.14)';
               ctx.fillRect(blk.x + 1, blk.y + 1, blk.w - 2, 2);
 
@@ -4254,21 +3826,113 @@
               ctx.lineWidth = 1;
               ctx.strokeRect(blk.x, blk.y, blk.w, blk.h);
 
-              // Masonry horizontal & staggered vertical seams
-              ctx.strokeStyle = 'rgba(15, 23, 42, 0.35)';
-              ctx.lineWidth = 0.9;
-              ctx.beginPath();
-              ctx.moveTo(blk.x, blk.y + blk.h * 0.5);
-              ctx.lineTo(blk.x + blk.w, blk.y + blk.h * 0.5);
-              const seamX = blk.x + (blk.row % 2 === 0 ? blk.w * 0.35 : blk.w * 0.65);
-              ctx.moveTo(seamX, blk.y);
-              ctx.lineTo(seamX, blk.y + blk.h * 0.5);
-              ctx.stroke();
+              // Kingdom-Specific Wall Texture, Arches & Heraldic Ornaments
+              if (k.id === 'mogol' && blk.mat === 'wood') {
+                // Horizontal heavy timber logs + iron vertical binding straps
+                ctx.strokeStyle = '#291509';
+                ctx.lineWidth = 1.2;
+                ctx.beginPath();
+                ctx.moveTo(blk.x, blk.y + blk.h * 0.34);
+                ctx.lineTo(blk.x + blk.w, blk.y + blk.h * 0.34);
+                ctx.moveTo(blk.x, blk.y + blk.h * 0.68);
+                ctx.lineTo(blk.x + blk.w, blk.y + blk.h * 0.68);
+                ctx.stroke();
+                ctx.fillStyle = '#334155';
+                ctx.fillRect(blk.x + 5, blk.y, 2.5, blk.h);
+                ctx.fillRect(blk.x + blk.w - 7.5, blk.y, 2.5, blk.h);
+              } else {
+                // Masonry horizontal & staggered vertical seams
+                ctx.strokeStyle = 'rgba(15, 23, 42, 0.35)';
+                ctx.lineWidth = 0.9;
+                ctx.beginPath();
+                ctx.moveTo(blk.x, blk.y + blk.h * 0.5);
+                ctx.lineTo(blk.x + blk.w, blk.y + blk.h * 0.5);
+                const seamX = blk.x + (blk.row % 2 === 0 ? blk.w * 0.35 : blk.w * 0.65);
+                ctx.moveTo(seamX, blk.y);
+                ctx.lineTo(seamX, blk.y + blk.h * 0.5);
+                ctx.stroke();
+              }
 
-              // Arrow slit embrasure on middle tower blocks
-              if (blk.row === 3 && (blk.col === 1 || blk.col === 4)) {
-                ctx.fillStyle = '#0f172a';
-                ctx.fillRect(blk.x + blk.w * 0.5 - 2, blk.y + 4, 4, blk.h - 8);
+              // Kingdom-specific windows & wall decorations
+              const midX = blk.x + blk.w * 0.5;
+              if (k.id === 'osmanli' && (blk.row === 3 || blk.row === 6) && (blk.logicalCol === 1 || blk.logicalCol === 3)) {
+                // Ottoman pointed arch window (Sivri Kemer)
+                ctx.fillStyle = '#1e1b18';
+                ctx.beginPath();
+                ctx.moveTo(midX - 4, blk.y + blk.h - 3);
+                ctx.lineTo(midX - 4, blk.y + 9);
+                ctx.quadraticCurveTo(midX, blk.y + 3, midX + 4, blk.y + 9);
+                ctx.lineTo(midX + 4, blk.y + blk.h - 3);
+                ctx.closePath();
+                ctx.fill();
+                ctx.strokeStyle = '#f59e0b';
+                ctx.lineWidth = 0.9;
+                ctx.stroke();
+              } else if (k.id === 'bizans' && (blk.row === 3 || blk.row === 6) && (blk.logicalCol === 0 || blk.logicalCol === 2)) {
+                // Byzantine semicircular Roman brick arch window
+                ctx.fillStyle = '#1e1b18';
+                ctx.beginPath();
+                ctx.arc(midX, blk.y + 10, 4.2, Math.PI, 0);
+                ctx.lineTo(midX + 4.2, blk.y + blk.h - 3);
+                ctx.lineTo(midX - 4.2, blk.y + blk.h - 3);
+                ctx.closePath();
+                ctx.fill();
+                ctx.strokeStyle = '#c2410c';
+                ctx.lineWidth = 1.2;
+                ctx.stroke();
+              } else if (k.id === 'kutsal_roma') {
+                if ((blk.row === 4 || blk.row === 7) && (blk.logicalCol === 1 || blk.logicalCol === 4)) {
+                  // Narrow Gothic lancet slit
+                  ctx.fillStyle = '#0f172a';
+                  ctx.beginPath();
+                  ctx.moveTo(midX - 2.2, blk.y + blk.h - 2);
+                  ctx.lineTo(midX - 2.2, blk.y + 7);
+                  ctx.lineTo(midX, blk.y + 3);
+                  ctx.lineTo(midX + 2.2, blk.y + 7);
+                  ctx.lineTo(midX + 2.2, blk.y + blk.h - 2);
+                  ctx.closePath();
+                  ctx.fill();
+                } else if (blk.row === 3 && (blk.logicalCol === 0 || blk.logicalCol === 5)) {
+                  // Knightly Templar/Imperial Cross Shield hung on outer tower
+                  ctx.fillStyle = '#f8fafc';
+                  ctx.beginPath();
+                  ctx.moveTo(midX - 5, blk.y + 4);
+                  ctx.lineTo(midX + 5, blk.y + 4);
+                  ctx.lineTo(midX + 4, blk.y + 13);
+                  ctx.lineTo(midX, blk.y + 18);
+                  ctx.lineTo(midX - 4, blk.y + 13);
+                  ctx.closePath();
+                  ctx.fill();
+                  ctx.fillStyle = '#1d4ed8';
+                  ctx.fillRect(midX - 1, blk.y + 5, 2, 11);
+                  ctx.fillRect(midX - 3.5, blk.y + 9, 7, 2);
+                }
+              } else if (k.id === 'memluk' && blk.row === 4 && (blk.logicalCol === 1 || blk.logicalCol === 3)) {
+                // Mamluk horseshoe arch window
+                ctx.fillStyle = '#291509';
+                ctx.beginPath();
+                ctx.arc(midX, blk.y + 9, 4.5, Math.PI * 0.85, Math.PI * 0.15, false);
+                ctx.lineTo(midX + 3.2, blk.y + blk.h - 3);
+                ctx.lineTo(midX - 3.2, blk.y + blk.h - 3);
+                ctx.closePath();
+                ctx.fill();
+                ctx.strokeStyle = '#ffd97d';
+                ctx.lineWidth = 0.9;
+                ctx.stroke();
+              } else if (k.id === 'mogol' && blk.row === 2 && (blk.logicalCol === 1 || blk.logicalCol === 4)) {
+                // Round bronze nomadic shield hung on timber wall
+                ctx.fillStyle = '#d97706';
+                ctx.beginPath();
+                ctx.arc(midX, blk.y + blk.h * 0.5, 5.5, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = '#fef08a';
+                ctx.lineWidth = 1.1;
+                ctx.stroke();
+              }
+
+              // Roof & Battlement Architecture on top blocks
+              if (blk.roofType && blk.roofType !== 'none') {
+                this._renderBlockRoof(ctx, blk, k, depthX, depthY);
               }
 
               // Battle damage cracks
@@ -4287,27 +3951,306 @@
                 const wave = Math.sin(this.animTime * 4.5 + side) * 3.5;
                 const fDir = side === 0 ? 1 : -1;
                 const poleX = blk.x + blk.w * 0.5;
+                const poleBaseY = blk.y - (blk.roofType === 'gothic_spire' ? 28 : blk.roofType === 'minaret' ? 30 : 4);
                 ctx.strokeStyle = '#ffd97d';
                 ctx.lineWidth = 2;
                 ctx.beginPath();
-                ctx.moveTo(poleX, blk.y);
-                ctx.lineTo(poleX, blk.y - 26);
+                ctx.moveTo(poleX, poleBaseY);
+                ctx.lineTo(poleX, poleBaseY - 24);
                 ctx.stroke();
 
-                ctx.fillStyle = k.primaryColor;
-                ctx.beginPath();
-                ctx.moveTo(poleX, blk.y - 26);
-                ctx.quadraticCurveTo(poleX + fDir * 12, blk.y - 23 + wave, poleX + fDir * 24, blk.y - 20);
-                ctx.lineTo(poleX, blk.y - 13);
-                ctx.closePath();
-                ctx.fill();
-                ctx.strokeStyle = k.secondaryColor;
-                ctx.lineWidth = 1;
-                ctx.stroke();
+                if (k.id === 'mogol') {
+                  // Mongol horse-tail Tuğ standard
+                  ctx.fillStyle = '#f8fafc';
+                  ctx.beginPath();
+                  ctx.moveTo(poleX, poleBaseY - 22);
+                  ctx.quadraticCurveTo(poleX + fDir * 8, poleBaseY - 14 + wave, poleX + fDir * 14, poleBaseY - 4);
+                  ctx.lineTo(poleX + fDir * 4, poleBaseY - 8);
+                  ctx.closePath();
+                  ctx.fill();
+                } else {
+                  ctx.fillStyle = k.primaryColor;
+                  ctx.beginPath();
+                  ctx.moveTo(poleX, poleBaseY - 24);
+                  ctx.quadraticCurveTo(poleX + fDir * 12, poleBaseY - 21 + wave, poleX + fDir * 24, poleBaseY - 18);
+                  ctx.lineTo(poleX, poleBaseY - 11);
+                  ctx.closePath();
+                  ctx.fill();
+                  ctx.strokeStyle = k.secondaryColor;
+                  ctx.lineWidth = 1;
+                  ctx.stroke();
+                }
               }
             }
 
-            // Arched Iron-Portcullis Castle Gate at Fortress Base
+            // Kingdom-Specific Fortress Main Gate
+            this._renderKingdomGate(ctx, side, k, castleCenterX);
+          }
+        }
+
+        _renderKingdomBaseDetails(ctx, side, k, plinthX, plinthW, plinthY, plinthH, depthX, depthY) {
+          // 3D top and side face of foundation plinth
+          ctx.fillStyle = k.id === 'memluk' ? '#d97706' : k.id === 'mogol' ? '#5c3a21' : '#64748b';
+          ctx.beginPath();
+          ctx.moveTo(plinthX, plinthY);
+          ctx.lineTo(plinthX + depthX, plinthY + depthY);
+          ctx.lineTo(plinthX + plinthW + depthX, plinthY + depthY);
+          ctx.lineTo(plinthX + plinthW, plinthY);
+          ctx.closePath();
+          ctx.fill();
+
+          const pSideX = side === 0 ? plinthX + plinthW : plinthX;
+          ctx.fillStyle = '#1e293b';
+          ctx.beginPath();
+          ctx.moveTo(pSideX, plinthY);
+          ctx.lineTo(pSideX + depthX, plinthY + depthY);
+          ctx.lineTo(pSideX + depthX, plinthY + plinthH + depthY);
+          ctx.lineTo(pSideX, plinthY + plinthH);
+          ctx.closePath();
+          ctx.fill();
+
+          const plinthGrad = ctx.createLinearGradient(plinthX, plinthY, plinthX, plinthY + plinthH);
+          if (k.id === 'osmanli') {
+            plinthGrad.addColorStop(0, '#e7e5e4');
+            plinthGrad.addColorStop(1, '#78716c');
+          } else if (k.id === 'bizans') {
+            plinthGrad.addColorStop(0, '#9a3412');
+            plinthGrad.addColorStop(1, '#44403c');
+          } else if (k.id === 'memluk') {
+            plinthGrad.addColorStop(0, '#f59e0b');
+            plinthGrad.addColorStop(1, '#92400e');
+          } else if (k.id === 'mogol') {
+            plinthGrad.addColorStop(0, '#784b2a');
+            plinthGrad.addColorStop(1, '#3b2312');
+          } else {
+            plinthGrad.addColorStop(0, '#64748b');
+            plinthGrad.addColorStop(1, '#1e293b');
+          }
+          ctx.fillStyle = plinthGrad;
+          ctx.fillRect(plinthX, plinthY, plinthW, plinthH);
+          ctx.strokeStyle = '#0f172a';
+          ctx.lineWidth = 1;
+          ctx.strokeRect(plinthX, plinthY, plinthW, plinthH);
+
+          // Sloped defensive stone talus buttresses
+          ctx.fillStyle = k.id === 'memluk' ? '#92400e' : '#334155';
+          ctx.beginPath();
+          ctx.moveTo(plinthX, plinthY);
+          ctx.lineTo(plinthX - 11, this.groundY + 1);
+          ctx.lineTo(plinthX, this.groundY + 1);
+          ctx.closePath();
+          ctx.fill();
+          ctx.beginPath();
+          ctx.moveTo(plinthX + plinthW, plinthY);
+          ctx.lineTo(plinthX + plinthW + 11, this.groundY + 1);
+          ctx.lineTo(plinthX + plinthW, this.groundY + 1);
+          ctx.closePath();
+          ctx.fill();
+
+          // Kingdom-specific environmental props beside the castle
+          const outerX = side === 0 ? plinthX - 24 : plinthX + plinthW + 24;
+          if (k.id === 'osmanli') {
+            // Imperial Cypress trees (Selvi Ağaçları)
+            for (const dx of [0, side === 0 ? -16 : 16]) {
+              const tx = outerX + dx;
+              ctx.fillStyle = '#451a03';
+              ctx.fillRect(tx - 2, this.groundY - 12, 4, 12);
+              ctx.fillStyle = '#14532d';
+              ctx.beginPath();
+              ctx.ellipse(tx, this.groundY - 34, 6.5, 24, 0, 0, Math.PI * 2);
+              ctx.fill();
+            }
+          } else if (k.id === 'memluk') {
+            // Oasis Date Palm Tree beside desert fortress
+            ctx.strokeStyle = '#78350f';
+            ctx.lineWidth = 4.5;
+            ctx.beginPath();
+            ctx.moveTo(outerX, this.groundY);
+            ctx.quadraticCurveTo(outerX + (side === 0 ? -6 : 6), this.groundY - 26, outerX, this.groundY - 50);
+            ctx.stroke();
+            ctx.fillStyle = '#15803d';
+            for (let a = -2; a <= 2; a++) {
+              ctx.beginPath();
+              ctx.ellipse(outerX + a * 7, this.groundY - 50 + Math.abs(a) * 2, 12, 3.2, a * 0.35, 0, Math.PI * 2);
+              ctx.fill();
+            }
+          } else if (k.id === 'mogol') {
+            // Spiked wooden palisade stakes in front of the fort
+            const stakeStart = side === 0 ? plinthX + plinthW + 4 : plinthX - 28;
+            for (let s = 0; s < 5; s++) {
+              const sx = stakeStart + s * 5;
+              ctx.strokeStyle = '#451a03';
+              ctx.lineWidth = 3.2;
+              ctx.beginPath();
+              ctx.moveTo(sx, this.groundY + 1);
+              ctx.lineTo(sx + (side === 0 ? 9 : -9), this.groundY - 22 - (s % 2) * 5);
+              ctx.stroke();
+            }
+          }
+        }
+
+        _renderBlockRoof(ctx, blk, k, depthX, depthY) {
+          const cx = blk.x + blk.w * 0.5;
+          const topY = blk.y;
+
+          if (blk.roofType === 'minaret') {
+            // Ottoman Slender Conical Lead Spire with Balcony & Golden Crescent
+            ctx.fillStyle = '#e7e5e4';
+            ctx.fillRect(blk.x - 2, topY - 4, blk.w + 4, 4);
+            ctx.fillStyle = '#334155';
+            ctx.beginPath();
+            ctx.moveTo(blk.x + 4, topY - 4);
+            ctx.lineTo(cx, topY - 34);
+            ctx.lineTo(blk.x + blk.w - 4, topY - 4);
+            ctx.closePath();
+            ctx.fill();
+            ctx.strokeStyle = '#ffd97d';
+            ctx.lineWidth = 1.1;
+            ctx.stroke();
+            ctx.fillStyle = '#ffd97d';
+            ctx.beginPath();
+            ctx.arc(cx, topY - 38, 3, 0, Math.PI * 2);
+            ctx.fill();
+          } else if (blk.roofType === 'gothic_spire') {
+            // Holy Roman Steep Slate-Blue Needle Spire with Cross
+            ctx.fillStyle = '#475569';
+            ctx.fillRect(blk.x - 3, topY - 5, blk.w + 6, 5);
+            ctx.fillStyle = '#1e3a8a';
+            ctx.beginPath();
+            ctx.moveTo(blk.x + 2, topY - 5);
+            ctx.lineTo(cx, topY - 38);
+            ctx.lineTo(blk.x + blk.w - 2, topY - 5);
+            ctx.closePath();
+            ctx.fill();
+            ctx.strokeStyle = '#93c5fd';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+            ctx.strokeStyle = '#ffd97d';
+            ctx.lineWidth = 1.6;
+            ctx.beginPath();
+            ctx.moveTo(cx, topY - 38);
+            ctx.lineTo(cx, topY - 46);
+            ctx.moveTo(cx - 3, topY - 43);
+            ctx.lineTo(cx + 3, topY - 43);
+            ctx.stroke();
+          } else if (blk.roofType === 'mamluk_dome') {
+            // Secondary Ribbed Mamluk Dome
+            ctx.fillStyle = '#d97706';
+            ctx.beginPath();
+            ctx.moveTo(blk.x + 3, topY);
+            ctx.quadraticCurveTo(blk.x + 2, topY - 18, cx, topY - 23);
+            ctx.quadraticCurveTo(blk.x + blk.w - 2, topY - 18, blk.x + blk.w - 3, topY);
+            ctx.closePath();
+            ctx.fill();
+            ctx.strokeStyle = '#fef08a';
+            ctx.lineWidth = 1.1;
+            ctx.stroke();
+          } else if (blk.roofType === 'byzantine_turret') {
+            // Byzantine Brick-Banded Watch Turret with Red Tile Roof
+            ctx.fillStyle = '#9a3412';
+            ctx.beginPath();
+            ctx.moveTo(blk.x - 2, topY);
+            ctx.lineTo(cx, topY - 16);
+            ctx.lineTo(blk.x + blk.w + 2, topY);
+            ctx.closePath();
+            ctx.fill();
+            ctx.strokeStyle = '#facc15';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+          } else if (blk.roofType === 'pagoda') {
+            // Mongol Concave Sweeping Pavilion Roof with Upturned Eaves
+            ctx.fillStyle = '#0369a1';
+            ctx.beginPath();
+            ctx.moveTo(blk.x - 6, topY - 2);
+            ctx.quadraticCurveTo(cx - 8, topY - 6, cx, topY - 17);
+            ctx.quadraticCurveTo(cx + 8, topY - 6, blk.x + blk.w + 6, topY - 2);
+            ctx.lineTo(blk.x + blk.w - 2, topY + 1);
+            ctx.lineTo(blk.x + 2, topY + 1);
+            ctx.closePath();
+            ctx.fill();
+            ctx.strokeStyle = '#ffd97d';
+            ctx.lineWidth = 1.2;
+            ctx.stroke();
+          } else if (blk.roofType === 'sawtooth') {
+            // Mamluk Stepped Sawtooth Merlons
+            ctx.fillStyle = '#f6d89e';
+            for (let i = 0; i < 3; i++) {
+              const mx = blk.x + 2 + i * 11;
+              ctx.beginPath();
+              ctx.moveTo(mx, topY);
+              ctx.lineTo(mx + 4.5, topY - 7);
+              ctx.lineTo(mx + 9, topY);
+              ctx.closePath();
+              ctx.fill();
+            }
+          } else if (blk.roofType === 'machicolation') {
+            // Holy Roman Overhanging Machicolation Battlements
+            ctx.fillStyle = '#64748b';
+            ctx.fillRect(blk.x - 2, topY - 4, blk.w + 4, 4);
+            for (let i = 0; i < 3; i++) {
+              ctx.fillRect(blk.x + 1 + i * 12, topY - 10, 8, 6);
+            }
+          } else if (blk.roofType === 'palisade_spike') {
+            // Mongol Sharpened Log Tips
+            ctx.fillStyle = '#784b2a';
+            for (let i = 0; i < 4; i++) {
+              const sx = blk.x + 1 + i * 8.5;
+              ctx.beginPath();
+              ctx.moveTo(sx, topY);
+              ctx.lineTo(sx + 4, topY - 9);
+              ctx.lineTo(sx + 8, topY);
+              ctx.closePath();
+              ctx.fill();
+            }
+          } else {
+            // Standard Stone Crenellations (Merlons)
+            ctx.fillStyle = k.id === 'osmanli' ? '#e7e5e4' : '#cbd5e1';
+            for (let i = 0; i < 3; i++) {
+              ctx.fillRect(blk.x + 2 + i * 12, topY - 6, 8, 6);
+            }
+          }
+        }
+
+        _renderKingdomGate(ctx, side, k, castleCenterX) {
+          ctx.save();
+          if (k.id === 'osmanli') {
+            // Imperial Pointed Arch Gate (Bab-ı Hümayun) with Gold Frame
+            ctx.fillStyle = '#1c1917';
+            ctx.beginPath();
+            ctx.moveTo(castleCenterX - 15, this.groundY);
+            ctx.lineTo(castleCenterX - 15, this.groundY - 22);
+            ctx.quadraticCurveTo(castleCenterX, this.groundY - 38, castleCenterX + 15, this.groundY - 22);
+            ctx.lineTo(castleCenterX + 15, this.groundY);
+            ctx.closePath();
+            ctx.fill();
+            ctx.strokeStyle = '#ffd97d';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+          } else if (k.id === 'memluk') {
+            // Mamluk Horseshoe Gate
+            ctx.fillStyle = '#1c1917';
+            ctx.beginPath();
+            ctx.arc(castleCenterX, this.groundY - 24, 15, Math.PI * 0.85, Math.PI * 0.15, false);
+            ctx.lineTo(castleCenterX + 12, this.groundY);
+            ctx.lineTo(castleCenterX - 12, this.groundY);
+            ctx.closePath();
+            ctx.fill();
+            ctx.strokeStyle = '#f59e0b';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+          } else if (k.id === 'mogol') {
+            // Heavy Timber Beam Fort Gate with Brass Studs
+            ctx.fillStyle = '#291509';
+            ctx.fillRect(castleCenterX - 15, this.groundY - 30, 30, 30);
+            ctx.strokeStyle = '#d97706';
+            ctx.lineWidth = 2.2;
+            ctx.strokeRect(castleCenterX - 15, this.groundY - 30, 30, 30);
+            ctx.beginPath();
+            ctx.moveTo(castleCenterX, this.groundY - 30);
+            ctx.lineTo(castleCenterX, this.groundY);
+            ctx.stroke();
+          } else {
+            // Arched Iron-Portcullis Castle Gate (Byzantine & Holy Roman)
             ctx.fillStyle = '#1c1917';
             ctx.beginPath();
             ctx.arc(castleCenterX, this.groundY - 24, 15, Math.PI, 0);
@@ -4315,7 +4258,7 @@
             ctx.lineTo(castleCenterX - 15, this.groundY);
             ctx.closePath();
             ctx.fill();
-            ctx.strokeStyle = '#94a3b8';
+            ctx.strokeStyle = k.id === 'bizans' ? '#eab308' : '#94a3b8';
             ctx.lineWidth = 1.8;
             ctx.stroke();
             ctx.beginPath();
@@ -4325,6 +4268,7 @@
             ctx.lineTo(castleCenterX + 6, this.groundY);
             ctx.stroke();
           }
+          ctx.restore();
         }
 
         _renderRoyalKeepBlock(ctx, blk, k, depthX, depthY) {
@@ -4358,72 +4302,107 @@
           ctx.lineWidth = 1.6;
           ctx.strokeRect(blk.x, blk.y, blk.w, blk.h);
 
-          // Kingdom-specific Royal Dome / Spire
+          // Kingdom-Specific Grand Royal Keep Crown / Dome / Pavilion
           const cx = blk.x + blk.w * 0.5;
           const topY = blk.y;
 
           ctx.save();
           if (k.id === 'osmanli') {
-            ctx.fillStyle = '#475569';
+            // Wide Imperial Ottoman Lead Dome + Flanking Half-Domes + Golden Crescent Finial
+            ctx.fillStyle = '#334155';
             ctx.beginPath();
-            ctx.arc(cx, topY, 18, Math.PI, 0);
+            ctx.arc(cx - 18, topY, 10, Math.PI, 0);
+            ctx.arc(cx + 18, topY, 10, Math.PI, 0);
+            ctx.fill();
+            const domeGrad = ctx.createRadialGradient(cx - 5, topY - 12, 3, cx, topY - 4, 24);
+            domeGrad.addColorStop(0, '#94a3b8');
+            domeGrad.addColorStop(1, '#1e293b');
+            ctx.fillStyle = domeGrad;
+            ctx.beginPath();
+            ctx.arc(cx, topY, 22, Math.PI, 0);
             ctx.fill();
             ctx.strokeStyle = '#ffd97d';
-            ctx.lineWidth = 1.5;
+            ctx.lineWidth = 1.6;
+            ctx.stroke();
+            // Golden Alem Crescent
+            ctx.beginPath();
+            ctx.arc(cx, topY - 26, 3.5, 0.4, Math.PI * 1.75);
             ctx.stroke();
           } else if (k.id === 'bizans') {
-            ctx.fillStyle = '#6d28d9';
+            // High Clerestory Drum + Purple & Gold Ribbed Hagia Dome
+            ctx.fillStyle = '#d6d3d1';
+            ctx.fillRect(cx - 16, topY - 9, 32, 9);
+            ctx.fillStyle = '#581c87';
             ctx.beginPath();
-            ctx.arc(cx, topY, 19, Math.PI, 0);
+            ctx.arc(cx, topY - 9, 20, Math.PI, 0);
             ctx.fill();
             ctx.strokeStyle = '#facc15';
             ctx.lineWidth = 1.8;
             ctx.stroke();
           } else if (k.id === 'kutsal_roma') {
+            // Towering Gothic Cathedral Spire with Side Pinnacles & Rose Window
             ctx.fillStyle = '#1e3a8a';
             ctx.beginPath();
-            ctx.moveTo(cx - 17, topY);
-            ctx.lineTo(cx, topY - 30);
-            ctx.lineTo(cx + 17, topY);
+            ctx.moveTo(cx - 21, topY);
+            ctx.lineTo(cx - 14, topY - 16);
+            ctx.lineTo(cx - 9, topY);
+            ctx.moveTo(cx + 9, topY);
+            ctx.lineTo(cx + 14, topY - 16);
+            ctx.lineTo(cx + 21, topY);
+            ctx.moveTo(cx - 16, topY);
+            ctx.lineTo(cx, topY - 38);
+            ctx.lineTo(cx + 16, topY);
             ctx.closePath();
             ctx.fill();
+            ctx.strokeStyle = '#cbd5e1';
+            ctx.lineWidth = 1.2;
+            ctx.stroke();
           } else if (k.id === 'memluk') {
-            ctx.fillStyle = '#d97706';
-            ctx.beginPath();
-            ctx.moveTo(cx - 17, topY);
-            ctx.quadraticCurveTo(cx - 16, topY - 22, cx, topY - 27);
-            ctx.quadraticCurveTo(cx + 16, topY - 22, cx + 17, topY);
-            ctx.closePath();
-            ctx.fill();
-          } else {
-            ctx.fillStyle = '#0284c7';
+            // Ornate Bulbous Horseshoe Mamluk Dome with Golden Ribs
+            ctx.fillStyle = '#b45309';
             ctx.beginPath();
             ctx.moveTo(cx - 18, topY);
-            ctx.lineTo(cx - 10, topY - 16);
-            ctx.lineTo(cx, topY - 23);
-            ctx.lineTo(cx + 10, topY - 16);
-            ctx.lineTo(cx + 18, topY);
+            ctx.quadraticCurveTo(cx - 22, topY - 22, cx, topY - 32);
+            ctx.quadraticCurveTo(cx + 22, topY - 22, cx + 18, topY);
             ctx.closePath();
             ctx.fill();
+            ctx.strokeStyle = '#fde047';
+            ctx.lineWidth = 1.6;
+            ctx.stroke();
+          } else {
+            // Mongol Great Khan Golden Ger / Sweeping Pavilion Crown
+            ctx.fillStyle = '#f8fafc';
+            ctx.fillRect(cx - 17, topY - 8, 34, 8);
+            ctx.fillStyle = '#0284c7';
+            ctx.beginPath();
+            ctx.moveTo(cx - 25, topY - 7);
+            ctx.quadraticCurveTo(cx - 12, topY - 14, cx, topY - 29);
+            ctx.quadraticCurveTo(cx + 12, topY - 14, cx + 25, topY - 7);
+            ctx.closePath();
+            ctx.fill();
+            ctx.strokeStyle = '#ffd97d';
+            ctx.lineWidth = 1.8;
+            ctx.stroke();
           }
           ctx.restore();
 
           // Grand Waving Royal Standard Flag
           const wave = Math.sin(this.animTime * 5 + side) * 4.5;
           const flagDir = side === 0 ? 1 : -1;
+          const mastBase = k.id === 'kutsal_roma' ? topY - 34 : topY - 24;
           ctx.strokeStyle = '#ffd97d';
           ctx.lineWidth = 2.5;
           ctx.beginPath();
-          ctx.moveTo(cx, topY - 18);
-          ctx.lineTo(cx, topY - 52);
+          ctx.moveTo(cx, mastBase);
+          ctx.lineTo(cx, mastBase - 32);
           ctx.stroke();
 
           ctx.fillStyle = k.primaryColor;
           ctx.beginPath();
-          ctx.moveTo(cx, topY - 52);
-          ctx.quadraticCurveTo(cx + flagDir * 18, topY - 48 + wave, cx + flagDir * 36, topY - 43);
-          ctx.lineTo(cx + flagDir * 29, topY - 36 + wave * 0.5);
-          ctx.lineTo(cx, topY - 32);
+          ctx.moveTo(cx, mastBase - 32);
+          ctx.quadraticCurveTo(cx + flagDir * 18, mastBase - 28 + wave, cx + flagDir * 36, mastBase - 23);
+          ctx.lineTo(cx + flagDir * 29, mastBase - 16 + wave * 0.5);
+          ctx.lineTo(cx, mastBase - 12);
           ctx.closePath();
           ctx.fill();
           ctx.strokeStyle = k.secondaryColor;
