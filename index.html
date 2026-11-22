@@ -43,13 +43,17 @@
     html, body {
       margin: 0;
       padding: 0;
-      width: 100%;
+      width: 100vw;
+      max-width: 100vw;
       height: 100dvh;
+      max-height: 100dvh;
       overflow: hidden;
       background-color: var(--bg-royal);
       color: #f8fafc;
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
       overscroll-behavior: none;
+      position: fixed;
+      inset: 0;
     }
 
     .font-royal {
@@ -132,12 +136,36 @@
     .app-shell {
       display: flex;
       flex-direction: column;
-      width: 100%;
+      width: 100vw;
+      max-width: 100vw;
       height: 100dvh;
+      max-height: 100dvh;
+      overflow: hidden;
       padding-top: var(--safe-top);
       padding-bottom: var(--safe-bottom);
       padding-left: var(--safe-left);
       padding-right: var(--safe-right);
+    }
+
+    /* Short Landscape Phone Adaptation (e.g., 844x390 / 932x430) */
+    @media (max-height: 460px) and (orientation: landscape) {
+      #topHud {
+        padding-top: 2px;
+        padding-bottom: 2px;
+      }
+      #bottomHud {
+        padding-top: 3px;
+        padding-bottom: 3px;
+      }
+      .weapon-btn, #btnSkill1, #btnSkill2 {
+        min-height: 34px !important;
+        padding-top: 3px !important;
+        padding-bottom: 3px !important;
+      }
+      #precisionControls {
+        transform: scale(0.86);
+        transform-origin: bottom left;
+      }
     }
 
     /* Custom Scrollbar */
@@ -173,10 +201,45 @@
     .float-slow {
       animation: floatSlow 3.2s infinite ease-in-out;
     }
+
+    @keyframes rotatePhoneHint {
+      0%, 100% { transform: rotate(0deg); }
+      35%, 65% { transform: rotate(-90deg); }
+    }
+    .phone-rotate-anim {
+      animation: rotatePhoneHint 2.4s infinite ease-in-out;
+    }
   </style>
 </head>
 <body>
   <div id="app" class="app-shell relative overflow-hidden">
+
+    <!-- ===================================================================== -->
+    <!-- 0. MOBILE PORTRAIT -> LANDSCAPE PROMPT OVERLAY                        -->
+    <!-- ===================================================================== -->
+    <div id="rotateDeviceOverlay" class="hidden fixed inset-0 z-[70] flex items-center justify-center p-6 bg-[#0d0a1f]/96 backdrop-blur-md text-center">
+      <div class="royal-panel w-full max-w-sm rounded-2xl p-6 space-y-4 border-2 border-[#e5b85c]">
+        <div class="mx-auto w-14 h-20 rounded-2xl border-2 border-[#ffd97d] bg-[#241e47] flex items-center justify-center shadow-lg phone-rotate-anim">
+          <div class="w-9 h-14 rounded-lg border border-amber-300/50 bg-[#131029] flex flex-col justify-between p-1">
+            <div class="w-3 h-0.5 bg-amber-300/70 mx-auto rounded"></div>
+            <span class="text-base">⚔️</span>
+            <div class="w-2 h-2 rounded-full border border-amber-300/70 mx-auto"></div>
+          </div>
+        </div>
+        <h2 id="rotateOverlayTitle" class="font-royal text-lg font-extrabold text-[#ffd97d]">
+          TELEFONU YAN ÇEVİRİN
+        </h2>
+        <p id="rotateOverlayDesc" class="text-xs text-slate-200 leading-relaxed">
+          İki kaleyi ve tüm kuşatma meydanını tam genişlikte görmek için cihazınızı yatay konuma çevirin.
+        </p>
+        <button id="btnForceLandscape" type="button" class="royal-btn w-full py-3 rounded-xl text-xs sm:text-sm">
+          ⛶ Tam Ekran & Yatay Aç
+        </button>
+        <button id="btnDismissRotate" type="button" class="text-[11px] text-slate-400 hover:text-amber-200 underline block mx-auto pt-1">
+          Şimdilik devam et
+        </button>
+      </div>
+    </div>
 
     <!-- ===================================================================== -->
     <!-- 1. TOP HUD BAR (Battle Mode)                                          -->
@@ -212,6 +275,9 @@
           <div class="flex items-center gap-1.5 mt-1">
             <button id="btnOpenPauseMenu" type="button" class="px-3 sm:px-4 py-0.5 rounded-full text-[10px] sm:text-xs font-bold tracking-wider uppercase bg-[#231d47] hover:bg-[#312961] text-[#f3d285] border border-[#8c6f3e] transition active:scale-95">
               MENÜ
+            </button>
+            <button id="btnToggleFullscreen" type="button" class="w-6 h-6 rounded-full flex items-center justify-center bg-[#231d47] hover:bg-[#312961] text-[#f3d285] border border-[#8c6f3e] text-xs transition active:scale-95" title="Tam Ekran / Fullscreen">
+              ⛶
             </button>
             <button id="btnToggleMute" type="button" class="w-6 h-6 rounded-full flex items-center justify-center bg-[#231d47] hover:bg-[#312961] text-[#f3d285] border border-[#8c6f3e] text-xs transition active:scale-95">
               🔊
@@ -585,7 +651,7 @@
             <div id="selectedChapterBanner" class="mt-3 p-3 rounded-xl bg-[#151130]/95 border border-[#8c6f3e] flex flex-col sm:flex-row sm:items-center justify-between gap-2.5"></div>
           </div>
 
-          <div class="p-3.5 rounded-xl bg-[#120f26] border border-[#8c6f3e]/60">
+          <div id="upgradesSection" class="p-3.5 rounded-xl bg-[#120f26] border border-[#8c6f3e]/60 transition-all duration-300">
             <h3 id="campUpgradesHeader" class="font-royal text-xs sm:text-sm font-bold text-[#ffd97d] uppercase tracking-wider mb-2.5">⚒️ Kalıcı Krallık Geliştirmeleri</h3>
             <div id="upgradesGrid" class="grid grid-cols-1 sm:grid-cols-3 gap-2.5"></div>
           </div>
@@ -752,9 +818,10 @@
         <div id="resultRewardBox" class="p-3 rounded-xl bg-[#131029] border border-[#8c6f3e] text-xs text-amber-300 font-bold">
           Kazanılan Ganimet: +35 Altın
         </div>
-        <div class="flex flex-col sm:flex-row gap-2 pt-2">
-          <button id="btnResultSecondary" type="button" class="royal-btn-secondary flex-1 py-2.5 rounded-xl text-xs sm:text-sm">Ana Menü</button>
-          <button id="btnResultPrimary" type="button" class="royal-btn flex-1 py-2.5 rounded-xl text-xs sm:text-sm">Sonraki Bölüm ➔</button>
+        <div class="flex flex-col sm:flex-row flex-wrap gap-2 pt-2">
+          <button id="btnResultSecondary" type="button" class="royal-btn-secondary flex-1 py-2.5 px-3 rounded-xl text-xs sm:text-sm">Ana Menü</button>
+          <button id="btnResultUpgrades" type="button" class="hidden royal-btn-secondary flex-1 py-2.5 px-3 rounded-xl text-xs sm:text-sm border-amber-400/80 text-amber-200">⚒️ Geliştirmeler</button>
+          <button id="btnResultPrimary" type="button" class="royal-btn flex-1 py-2.5 px-3 rounded-xl text-xs sm:text-sm">Sonraki Bölüm ➔</button>
         </div>
       </div>
     </div>
@@ -933,10 +1000,22 @@
           resultCampLoseDesc: 'Kalemiz düştü! Atölyeden surlarını güçlendirip tekrar saldırabilirsin.',
           resultCampLoseReward: 'Teselli Ganimeti: +10 Altın',
           resultTryAgain: 'Tekrar Dene',
+          resultUpgrades: '⚒️ Geliştirmeler',
           resultQuickDesc: (name) => `${name} meydan muharebesinden zaferle ayrıldı!`,
           resultRemainingHp: (hp) => `Kalan Kale Canı: ${hp} HP`,
           resultPlayAgain: 'Yeniden Oyna',
           resultMainMenu: 'Ana Menü',
+          // Mobile Portrait Rotate Overlay & Weather Surprises
+          rotateTitle: 'TELEFONU YAN ÇEVİRİN',
+          rotateDesc: 'İki kaleyi ve tüm kuşatma meydanını tam genişlikte görmek için cihazınızı yatay konuma çevirin.',
+          rotateBtn: '⛶ Tam Ekran & Yatay Aç',
+          rotateSkip: 'Şimdilik devam et',
+          campWeatherLabel: 'Hava Koşulu:',
+          windSurpriseBreeze: '🍃 VADİ ESİNTİSİ!',
+          windSurpriseGust: '🌬️ RÜZGAR YÖN DEĞİŞTİRDİ!',
+          windSurpriseSandstorm: '🌪️ ANİ KUM FIRTINASI!',
+          windSurpriseCalm: '☀️ FIRTINA DİNDİ (RÜZGARSIZ)',
+          windSurpriseStorm: '⛈️ ŞİDDETLİ KASIRGA!',
           // Floating Canvas & Toasts
           floatMehter: 'MEHTER MARŞI! +25% HASAR',
           floatShield: 'KUTSAL KALKAN AKTİF!',
@@ -1118,10 +1197,22 @@
           resultCampLoseDesc: 'Our fortress has fallen! Upgrade your walls in the workshop and strike again.',
           resultCampLoseReward: 'Consolation Loot: +10 Gold',
           resultTryAgain: 'Try Again',
+          resultUpgrades: '⚒️ Upgrades',
           resultQuickDesc: (name) => `${name} emerged victorious from the battlefield!`,
           resultRemainingHp: (hp) => `Remaining Castle HP: ${hp} HP`,
           resultPlayAgain: 'Play Again',
           resultMainMenu: 'Main Menu',
+          // Mobile Portrait Rotate Overlay & Weather Surprises
+          rotateTitle: 'ROTATE TO LANDSCAPE',
+          rotateDesc: 'Turn your phone sideways to view both fortresses and the full siege battlefield.',
+          rotateBtn: '⛶ Fullscreen & Landscape',
+          rotateSkip: 'Continue anyway',
+          campWeatherLabel: 'Weather:',
+          windSurpriseBreeze: '🍃 VALLEY BREEZE!',
+          windSurpriseGust: '🌬️ WIND SHIFTED DIRECTION!',
+          windSurpriseSandstorm: '🌪️ SUDDEN SANDSTORM!',
+          windSurpriseCalm: '☀️ DEAD CALM (NO WIND)',
+          windSurpriseStorm: '⛈️ HOWLING TEMPEST!',
           // Floating Canvas & Toasts
           floatMehter: 'JANISSARY MARCH! +25% DMG',
           floatShield: 'HOLY AEGIS ACTIVE!',
@@ -1520,6 +1611,8 @@
           enemyKingdom: 'bizans',
           aiDiff: 'easy',
           windMode: 'calm',
+          windSurprise: 'breeze',
+          weatherNote: { tr: 'Genelde Rüzgarsız (Ara sıra hafif esinti)', en: 'Mostly Calm (Occasional light breeze)' },
           skyTheme: 'day',
           rewardGold: 35,
           castleLayout: 'outpost',
@@ -1550,6 +1643,8 @@
           enemyKingdom: 'bizans',
           aiDiff: 'easy',
           windMode: 'normal',
+          windSurprise: 'strait_shift',
+          weatherNote: { tr: 'Lodos & Poyraz (Her tur yön değiştiren rüzgar)', en: 'Strait Gales (Reversing crosswinds)' },
           skyTheme: 'dusk',
           rewardGold: 45,
           castleLayout: 'strait',
@@ -1580,6 +1675,8 @@
           enemyKingdom: 'memluk',
           aiDiff: 'normal',
           windMode: 'normal',
+          windSurprise: 'sandstorm',
+          weatherNote: { tr: 'Çöl Sürprizi (Her 3 turda ani kum fırtınası)', en: 'Desert Surprise (Sudden sandstorm every 3 turns)' },
           skyTheme: 'desert',
           rewardGold: 55,
           castleLayout: 'desert',
@@ -1610,6 +1707,8 @@
           enemyKingdom: 'kutsal_roma',
           aiDiff: 'normal',
           windMode: 'normal',
+          windSurprise: 'mountain_eddy',
+          weatherNote: { tr: 'Dağ Anaforu (Bir tur durgun, bir tur sert rüzgar)', en: 'Mountain Eddy (Alternating dead calm & sharp gusts)' },
           skyTheme: 'overcast',
           rewardGold: 65,
           castleLayout: 'bastion',
@@ -1640,6 +1739,8 @@
           enemyKingdom: 'mogol',
           aiDiff: 'hard',
           windMode: 'storm',
+          windSurprise: 'steppe_gale',
+          weatherNote: { tr: 'Bozkır Kasırgası (Sert ve değişken rüzgarlar)', en: 'Steppe Gale (Fierce shifting winds)' },
           skyTheme: 'crimson',
           rewardGold: 80,
           castleLayout: 'steppe',
@@ -1670,6 +1771,8 @@
           enemyKingdom: 'bizans',
           aiDiff: 'hard',
           windMode: 'storm',
+          windSurprise: 'imperial_tempest',
+          weatherNote: { tr: 'İmparatorluk Fırtınası (Yüksek şiddetli rüzgar dalgaları)', en: 'Imperial Tempest (Extreme storm gusts)' },
           skyTheme: 'imperial',
           rewardGold: 120,
           castleLayout: 'imperial',
@@ -1698,6 +1801,7 @@
       const getChShort = (ch) => ch.shortName[currentLang] || ch.shortName.tr;
       const getChLore = (ch) => ch.lore[currentLang] || ch.lore.tr;
       const getChDesc = (ch) => ch.desc[currentLang] || ch.desc.tr;
+      const getChWeather = (ch) => (ch.weatherNote && (ch.weatherNote[currentLang] || ch.weatherNote.tr)) || '';
       const getChTaunts = (ch) => ch.taunts[currentLang] || ch.taunts.tr;
 
       /* =========================================================================
@@ -1989,14 +2093,15 @@
           this.canvas = canvas;
           this.ctx = canvas.getContext('2d');
 
-          this.W = 1440;
-          this.H = 640;
-          this.groundY = 552;
+          this.W = 1680;
+          this.H = 680;
+          this.groundY = 588;
 
           this.mode = 'campaign';
           this.chapterId = 1;
           this.aiDifficulty = 'normal';
           this.windMode = 'normal';
+          this.windSurprise = null;
           this.skyTheme = 'day';
           this.castleLayout = 'standard';
           this.rng = Math.random;
@@ -2049,10 +2154,10 @@
             { x: 1060, y: 140, phase: 0.8, speed: 22 }
           ];
           this.groundPebbles = [];
-          for (let i = 0; i < 65; i++) {
+          for (let i = 0; i < 85; i++) {
             this.groundPebbles.push({
-              x: (i * 23) % this.W,
-              y: this.groundY + 14 + ((i * 37) % 62),
+              x: (i * 21) % this.W,
+              y: this.groundY + 14 + ((i * 37) % 66),
               rx: 5 + (i % 7),
               ry: 2.5 + (i % 3)
             });
@@ -2064,6 +2169,7 @@
           this.chapterId = config.chapterId || 1;
           this.aiDifficulty = config.aiDifficulty || 'normal';
           this.windMode = config.windMode || 'normal';
+          this.windSurprise = config.windSurprise || null;
           this.skyTheme = config.skyTheme || 'day';
           this.castleLayout = config.castleLayout || 'standard';
           this.rng = config.seed ? createSeededRandom(config.seed) : Math.random;
@@ -2098,10 +2204,10 @@
           ];
 
           this.blocks = [];
-          this._buildCastle(0, p1K, this.castleLayout);
+          this._buildCastle(0, p1K, this.mode === 'campaign' ? 'standard' : this.castleLayout);
           this._buildCastle(1, p2K, this.castleLayout);
 
-          this._rollWind();
+          this._rollWind(false);
 
           if (this.mode === 'online' && onlineMgr.role === 'guest') {
             this.phase = 'online_waiting';
@@ -2120,7 +2226,7 @@
             maxHp,
             gold,
             angle: 45,
-            power: 72,
+            power: 74,
             selectedWeapon: 'stone',
             activeSkillAmmo: null,
             mehterBuff: false,
@@ -2128,7 +2234,7 @@
             skill1Cooldown: 0,
             skill2Cooldown: 0,
             powerUpgMult: 1 + powerUpgLevel * 0.08,
-            catapultX: side === 0 ? 415 : this.W - 415,
+            catapultX: side === 0 ? 405 : this.W - 405,
             catapultY: this.groundY,
             recoil: 0
           };
@@ -2138,12 +2244,34 @@
           const blockW = 36;
           const blockH = 22;
           const cols = 6;
-          const baseStartX = side === 0 ? 155 : this.W - 155 - cols * blockW;
+          const baseStartX = side === 0 ? 110 : this.W - 110 - cols * blockW;
 
-          let colHeights = [6, 7, 5, 6, 6, 8];
-          if (layout === 'outpost') colHeights = [5, 6, 5, 5, 5, 7];
-          if (layout === 'strait') colHeights = [7, 6, 5, 6, 7, 8];
-          if (layout === 'imperial') colHeights = [7, 8, 6, 7, 8, 9];
+          // Distinct architectural silhouette per Kingdom
+          const kingdomProfiles = {
+            osmanli:     { heights: [6, 8, 6, 7, 8, 9], keepCol: 2, primaryMat: 'brick', accentMat: 'stone', trimMat: 'stone' },
+            bizans:      { heights: [5, 6, 7, 8, 9, 7], keepCol: 3, primaryMat: 'stone', accentMat: 'brick', trimMat: 'stone' },
+            kutsal_roma: { heights: [7, 9, 6, 6, 9, 7], keepCol: 1, primaryMat: 'stone', accentMat: 'stone', trimMat: 'wood'  },
+            memluk:      { heights: [6, 8, 7, 7, 8, 6], keepCol: 2, primaryMat: 'brick', accentMat: 'stone', trimMat: 'wood'  },
+            mogol:       { heights: [5, 7, 8, 7, 6, 6], keepCol: 2, primaryMat: 'wood',  accentMat: 'stone', trimMat: 'wood'  }
+          };
+
+          const prof = kingdomProfiles[kingdom.id] || kingdomProfiles.osmanli;
+          let colHeights = [...prof.heights];
+
+          // Chapter layout modifiers add unique structural variations
+          if (layout === 'outpost') {
+            colHeights = colHeights.map(h => Math.max(5, h - 1));
+          } else if (layout === 'strait') {
+            colHeights = [8, 6, 5, 5, 7, 9];
+          } else if (layout === 'desert') {
+            colHeights = [6, 9, 7, 7, 8, 6];
+          } else if (layout === 'bastion') {
+            colHeights = [7, 8, 7, 8, 9, 9];
+          } else if (layout === 'steppe') {
+            colHeights = [6, 8, 9, 8, 7, 6];
+          } else if (layout === 'imperial') {
+            colHeights = [7, 8, 9, 9, 10, 8];
+          }
 
           for (let c = 0; c < cols; c++) {
             const visualCol = side === 0 ? c : (cols - 1 - c);
@@ -2152,12 +2280,14 @@
 
             for (let r = 0; r < h; r++) {
               const by = this.groundY - (r + 1) * blockH;
-              let mat = 'brick';
+              let mat = prof.primaryMat;
 
-              if (c === cols - 1 || (layout === 'bastion' && c >= cols - 2) || (layout === 'imperial' && (c === 0 || c === cols - 1))) {
+              if (c === cols - 1 || (layout === 'bastion' && c >= cols - 2) || (layout === 'imperial' && (c === 0 || c >= cols - 2))) {
                 mat = 'stone';
-              } else if (r === h - 1 || (layout === 'desert' && r % 2 === 1)) {
-                mat = 'wood';
+              } else if (r === h - 1) {
+                mat = prof.trimMat;
+              } else if ((c + r) % 3 === 0) {
+                mat = prof.accentMat;
               }
 
               const baseBlockHp = mat === 'stone' ? 68 : mat === 'brick' ? 42 : 28;
@@ -2179,7 +2309,7 @@
               });
             }
 
-            if (c === 1) {
+            if (c === prof.keepCol) {
               const keepY = this.groundY - (h + 1) * blockH;
               this.blocks.push({
                 id: `${side}_keep`,
@@ -2189,10 +2319,10 @@
                 x: bx,
                 y: keepY,
                 w: blockW,
-                h: blockH + 4,
+                h: blockH + 6,
                 mat: 'stone',
-                hp: 85,
-                maxHp: 85,
+                hp: 88,
+                maxHp: 88,
                 burnTurns: 0,
                 isKeep: true,
                 hasBanner: false
@@ -2201,7 +2331,68 @@
           }
         }
 
-        _rollWind() {
+        _rollWind(announceSurprise = true) {
+          const prevWind = this.wind;
+
+          if (this.mode === 'campaign' && this.windSurprise) {
+            if (this.windSurprise === 'breeze') {
+              if (this.turnCount % 3 === 0) {
+                this.wind = this.rng() > 0.5 ? 4 : -4;
+                if (announceSurprise && this.wind !== prevWind) {
+                  this._spawnFloatingText(this.W / 2, 185, t('windSurpriseBreeze'), '#7dd3fc');
+                }
+              } else {
+                this.wind = 0;
+              }
+              return;
+            }
+            if (this.windSurprise === 'strait_shift') {
+              const mag = 6 + Math.round(this.rng() * 6);
+              const dir = prevWind >= 0 ? -1 : 1;
+              this.wind = dir * mag;
+              if (announceSurprise) {
+                this._spawnFloatingText(this.W / 2, 185, t('windSurpriseGust'), '#38bdf8');
+              }
+              return;
+            }
+            if (this.windSurprise === 'sandstorm') {
+              if (this.turnCount % 3 === 0) {
+                this.wind = (this.rng() > 0.5 ? 1 : -1) * (13 + Math.round(this.rng() * 4));
+                this.sandstormAlpha = 0.42;
+                if (announceSurprise) {
+                  this._spawnFloatingText(this.W / 2, 185, t('windSurpriseSandstorm'), '#fbbf24');
+                }
+              } else {
+                this.wind = Math.round((this.rng() * 12) - 6);
+              }
+              return;
+            }
+            if (this.windSurprise === 'mountain_eddy') {
+              if (this.turnCount % 2 === 0) {
+                this.wind = 0;
+                if (announceSurprise && prevWind !== 0) {
+                  this._spawnFloatingText(this.W / 2, 185, t('windSurpriseCalm'), '#fde047');
+                }
+              } else {
+                this.wind = (this.rng() > 0.5 ? 1 : -1) * (10 + Math.round(this.rng() * 5));
+                if (announceSurprise) {
+                  this._spawnFloatingText(this.W / 2, 185, t('windSurpriseGust'), '#93c5fd');
+                }
+              }
+              return;
+            }
+            if (this.windSurprise === 'steppe_gale' || this.windSurprise === 'imperial_tempest') {
+              const minMag = this.windSurprise === 'imperial_tempest' ? 11 : 9;
+              const mag = minMag + Math.round(this.rng() * 6);
+              const dir = (this.turnCount % 2 === 0 && prevWind !== 0) ? -Math.sign(prevWind) : (this.rng() > 0.5 ? 1 : -1);
+              this.wind = dir * mag;
+              if (announceSurprise && this.turnCount % 2 === 0) {
+                this._spawnFloatingText(this.W / 2, 185, t('windSurpriseStorm'), '#f87171');
+              }
+              return;
+            }
+          }
+
           if (this.windMode === 'calm') {
             this.wind = 0;
           } else if (this.windMode === 'storm') {
@@ -2464,7 +2655,7 @@
           sound.playLaunch(isHeavy);
 
           const dir = p.side === 0 ? 1 : -1;
-          const baseSpeed = (340 + p.power * 6.9) * p.kingdom.speedMult;
+          const baseSpeed = (395 + p.power * 7.85) * p.kingdom.speedMult;
 
           const mehterMult = p.mehterBuff ? 1.25 : 1.0;
           const heavyMult = isHeavy ? p.kingdom.heavyDamageMult : 1.0;
@@ -2556,7 +2747,7 @@
             friendlyBlocks[i].burnTurns = 0;
           }
 
-          const castleX = side === 0 ? 260 : this.W - 260;
+          const castleX = side === 0 ? 220 : this.W - 220;
           this._spawnFloatingText(castleX, this.groundY - 170, t('floatRepair', amount), '#4ade80');
           for (let i = 0; i < 16; i++) {
             this.particles.push({
@@ -2953,12 +3144,12 @@
             this.blocks = this.blocks.filter(b => b.hp > 0);
             this._settleCollapsedBlocks(this.turnSide);
             activePlayer.hp = Math.max(0, activePlayer.hp - burnTotal);
-            const cx = this.turnSide === 0 ? 260 : this.W - 260;
+            const cx = this.turnSide === 0 ? 220 : this.W - 220;
             this._spawnFloatingText(cx, this.groundY - 140, t('floatBurn', burnTotal), '#fb923c');
           }
 
           if (this.mode !== 'online' || this._canLocalControlTurn()) {
-            this._rollWind();
+            this._rollWind(true);
           }
 
           onBattleStateUpdated();
@@ -3052,7 +3243,7 @@
             ai.selectedWeapon = 'stone';
           }
 
-          const targetX = 240 + (Math.random() - 0.5) * 90;
+          const targetX = 218 + (Math.random() - 0.5) * 95;
           const targetY = this.groundY - 85;
           const angleOffset = ai.activeSkillAmmo === 'ammo_trebuchet' ? 8 : 0;
           const speedScale = ai.activeSkillAmmo === 'ammo_sahi' ? 1.10
@@ -3061,11 +3252,11 @@
             : 1.0;
 
           let bestAngle = 48;
-          let bestPower = 74;
+          let bestPower = 76;
           let bestError = Infinity;
 
           for (let testAngle = 30; testAngle <= 68; testAngle += 3) {
-            for (let testPower = 46; testPower <= 96; testPower += 3) {
+            for (let testPower = 48; testPower <= 100; testPower += 3) {
               const landX = this._simulateLandingX(1, testAngle + angleOffset, testPower, speedScale, targetY);
               const err = Math.abs(landX - targetX);
               if (err < bestError) {
@@ -3093,7 +3284,7 @@
           const p = this.players[side];
           const dir = side === 0 ? 1 : -1;
           const rad = (angle * Math.PI) / 180;
-          const spd = (340 + power * 6.9) * p.kingdom.speedMult * speedScale;
+          const spd = (395 + power * 7.85) * p.kingdom.speedMult * speedScale;
           let x = p.catapultX + dir * 24;
           let y = p.catapultY - 46;
           let vx = Math.cos(rad) * spd * dir;
@@ -3159,6 +3350,27 @@
 
           ctx.translate(offsetX, offsetY);
           ctx.scale(scale, scale);
+
+          // Extend sky and ground cleanly beyond 1440px when aspect ratio is wide on landscape phones
+          const extraLeft = offsetX / scale;
+          const extraRight = (this.canvas.width - (offsetX + this.W * scale)) / scale;
+          if (extraLeft > 0 || extraRight > 0) {
+            const extGrad = ctx.createLinearGradient(0, -120, 0, this.groundY);
+            extGrad.addColorStop(0, '#3b4f68');
+            extGrad.addColorStop(0.55, '#8ca4b5');
+            extGrad.addColorStop(1, '#dfc9a4');
+            ctx.fillStyle = extGrad;
+            if (extraLeft > 0) ctx.fillRect(-extraLeft - 20, -200, extraLeft + 30, this.groundY + 200);
+            if (extraRight > 0) ctx.fillRect(this.W - 10, -200, extraRight + 30, this.groundY + 200);
+
+            ctx.fillStyle = this.skyTheme === 'desert' ? '#c2a366' : '#539434';
+            if (extraLeft > 0) ctx.fillRect(-extraLeft - 20, this.groundY, extraLeft + 30, 11);
+            if (extraRight > 0) ctx.fillRect(this.W - 10, this.groundY, extraRight + 30, 11);
+
+            ctx.fillStyle = '#68482f';
+            if (extraLeft > 0) ctx.fillRect(-extraLeft - 20, this.groundY + 11, extraLeft + 30, 240);
+            if (extraRight > 0) ctx.fillRect(this.W - 10, this.groundY + 11, extraRight + 30, 240);
+          }
 
           if (this.shakeTime > 0) {
             const sx = (Math.random() - 0.5) * this.shakeIntensity * 2;
@@ -3332,20 +3544,22 @@
             if (!player || !player.kingdom) continue;
             const k = player.kingdom;
 
-            const castleStartX = side === 0 ? 155 : this.W - 155 - 6 * 36;
+            const castleStartX = side === 0 ? 110 : this.W - 110 - 6 * 36;
             const castleCenterX = castleStartX + 108;
-            const depthX = side === 0 ? 14 : -14;
-            const depthY = -9;
+            const depthX = side === 0 ? 15 : -15;
+            const depthY = -10;
 
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.36)';
+            // Grand shadow under the citadel
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.42)';
             ctx.beginPath();
-            ctx.ellipse(castleCenterX + depthX * 0.5, this.groundY + 4, 142, 11, 0, 0, Math.PI * 2);
+            ctx.ellipse(castleCenterX + depthX * 0.5, this.groundY + 5, 152, 13, 0, 0, Math.PI * 2);
             ctx.fill();
 
-            const plinthX = castleStartX - 7;
-            const plinthW = 6 * 36 + 14;
-            const plinthY = this.groundY - 6;
-            const plinthH = 7;
+            // Kingdom-specific grand foundation terrace & flanking corner buttresses
+            const plinthX = castleStartX - 10;
+            const plinthW = 6 * 36 + 20;
+            const plinthY = this.groundY - 8;
+            const plinthH = 9;
 
             ctx.fillStyle = '#64748b';
             ctx.beginPath();
@@ -3356,8 +3570,8 @@
             ctx.closePath();
             ctx.fill();
 
-            ctx.fillStyle = '#1e293b';
             const pSideX = side === 0 ? plinthX + plinthW : plinthX;
+            ctx.fillStyle = '#1e293b';
             ctx.beginPath();
             ctx.moveTo(pSideX, plinthY);
             ctx.lineTo(pSideX + depthX, plinthY + depthY);
@@ -3366,11 +3580,28 @@
             ctx.closePath();
             ctx.fill();
 
-            ctx.fillStyle = '#334155';
+            const plinthGrad = ctx.createLinearGradient(plinthX, plinthY, plinthX, plinthY + plinthH);
+            plinthGrad.addColorStop(0, '#475569');
+            plinthGrad.addColorStop(1, '#1e293b');
+            ctx.fillStyle = plinthGrad;
             ctx.fillRect(plinthX, plinthY, plinthW, plinthH);
-            ctx.strokeStyle = '#0f172a';
-            ctx.lineWidth = 1;
+            ctx.strokeStyle = k.secondaryColor;
+            ctx.lineWidth = 1.2;
             ctx.strokeRect(plinthX, plinthY, plinthW, plinthH);
+
+            // Mongol defensive wooden palisade stakes in front of the terrace
+            if (k.id === 'mogol') {
+              const stakeStart = side === 0 ? plinthX + plinthW + 2 : plinthX - 22;
+              for (let s = 0; s < 4; s++) {
+                const sx = stakeStart + s * 5;
+                ctx.strokeStyle = '#78350f';
+                ctx.lineWidth = 2.5;
+                ctx.beginPath();
+                ctx.moveTo(sx, this.groundY);
+                ctx.lineTo(sx + (side === 0 ? 7 : -7), this.groundY - 18 - (s % 2) * 4);
+                ctx.stroke();
+              }
+            }
 
             if (player.shieldActive) {
               ctx.save();
@@ -3378,7 +3609,7 @@
               ctx.fillStyle = 'rgba(56, 189, 248, 0.14)';
               ctx.lineWidth = 3;
               ctx.beginPath();
-              ctx.arc(castleCenterX + depthX * 0.4, this.groundY, 165, Math.PI, 0);
+              ctx.arc(castleCenterX + depthX * 0.4, this.groundY, 175, Math.PI, 0);
               ctx.fill();
               ctx.stroke();
               ctx.restore();
@@ -3399,19 +3630,51 @@
 
               const hpRatio = blk.hp / blk.maxHp;
 
+              // Kingdom-tailored rich masonry palettes
               let frontTop = '#854d27', frontBot = '#5c3317', topFace = '#a8673a', sideFace = '#3b1f0c', edgeCol = '#2a1507';
-              if (blk.mat === 'stone') {
-                frontTop = '#cbd5e1';
-                frontBot = '#94a3b8';
-                topFace = '#e2e8f0';
-                sideFace = '#64748b';
-                edgeCol = '#334155';
-              } else if (blk.mat === 'wood') {
-                frontTop = '#a16207';
-                frontBot = '#713f12';
-                topFace = '#ca8a04';
-                sideFace = '#451a03';
-                edgeCol = '#290f02';
+              if (k.id === 'osmanli') {
+                if (blk.mat === 'stone') {
+                  frontTop = '#e2e8f0'; frontBot = '#94a3b8'; topFace = '#f8fafc'; sideFace = '#64748b'; edgeCol = '#334155';
+                } else {
+                  // Ottoman crimson-terracotta & cream ablaq alternation
+                  const isCrimsonRow = blk.row % 2 === 0;
+                  frontTop = isCrimsonRow ? '#991b1b' : '#d6b88d';
+                  frontBot = isCrimsonRow ? '#7f1d1d' : '#a88454';
+                  topFace = isCrimsonRow ? '#dc2626' : '#ebd5b3';
+                  sideFace = '#450a0a';
+                  edgeCol = '#291509';
+                }
+              } else if (k.id === 'bizans') {
+                if (blk.mat === 'stone') {
+                  frontTop = '#cbd5e1'; frontBot = '#8b9bb4'; topFace = '#e2e8f0'; sideFace = '#4c1d95'; edgeCol = '#2e1065';
+                } else {
+                  // Byzantine imperial porphyry & Roman brick bands
+                  frontTop = '#7e22ce'; frontBot = '#581c87'; topFace = '#a855f7'; sideFace = '#3b0764'; edgeCol = '#1e1b4b';
+                }
+              } else if (k.id === 'kutsal_roma') {
+                if (blk.mat === 'stone') {
+                  frontTop = '#94a3b8'; frontBot = '#475569'; topFace = '#cbd5e1'; sideFace = '#1e293b'; edgeCol = '#0f172a';
+                } else {
+                  frontTop = '#3b5998'; frontBot = '#1e3a8a'; topFace = '#60a5fa'; sideFace = '#172554'; edgeCol = '#0f172a';
+                }
+              } else if (k.id === 'memluk') {
+                if (blk.mat === 'stone') {
+                  frontTop = '#fde68a'; frontBot = '#d97706'; topFace = '#fef3c7'; sideFace = '#92400e'; edgeCol = '#451a03';
+                } else {
+                  // Mamluk golden sandstone & ochre ablaq stripes
+                  const isOchre = blk.row % 2 === 1;
+                  frontTop = isOchre ? '#b45309' : '#e7c68b';
+                  frontBot = isOchre ? '#78350f' : '#c29b57';
+                  topFace = '#f5d79c';
+                  sideFace = '#451a03';
+                  edgeCol = '#291509';
+                }
+              } else if (k.id === 'mogol') {
+                if (blk.mat === 'stone') {
+                  frontTop = '#64748b'; frontBot = '#334155'; topFace = '#94a3b8'; sideFace = '#0f172a'; edgeCol = '#020617';
+                } else {
+                  frontTop = '#854d0e'; frontBot = '#522e08'; topFace = '#a16207'; sideFace = '#361c04'; edgeCol = '#1c0d02';
+                }
               }
 
               ctx.fillStyle = topFace;
@@ -3439,24 +3702,21 @@
               ctx.lineWidth = 0.9;
               ctx.stroke();
 
-              ctx.beginPath();
-              ctx.moveTo(sideEdgeX, blk.y + blk.h * 0.5);
-              ctx.lineTo(sideEdgeX + depthX, blk.y + blk.h * 0.5 + depthY);
-              ctx.stroke();
-
               const fGrad = ctx.createLinearGradient(blk.x, blk.y, blk.x, blk.y + blk.h);
               fGrad.addColorStop(0, frontTop);
               fGrad.addColorStop(1, frontBot);
               ctx.fillStyle = fGrad;
               ctx.fillRect(blk.x, blk.y, blk.w, blk.h);
 
-              ctx.fillStyle = 'rgba(255, 255, 255, 0.24)';
+              // Top bevel highlight
+              ctx.fillStyle = 'rgba(255, 255, 255, 0.28)';
               ctx.fillRect(blk.x + 1, blk.y + 1, blk.w - 2, 2);
 
               ctx.strokeStyle = edgeCol;
               ctx.lineWidth = 1.1;
               ctx.strokeRect(blk.x + 0.5, blk.y + 0.5, blk.w - 1, blk.h - 1);
 
+              // Ornate window / masonry details per kingdom
               if (blk.mat === 'stone') {
                 ctx.beginPath();
                 ctx.moveTo(blk.x + blk.w / 2, blk.y);
@@ -3464,10 +3724,11 @@
                 ctx.stroke();
 
                 if (blk.row % 2 === 1 && (blk.col === 0 || blk.col === 5)) {
+                  // Glowing golden arrow-slit / arched lancet window
                   ctx.fillStyle = '#0f172a';
-                  ctx.fillRect(blk.x + blk.w / 2 - 2.5, blk.y + 4, 5, 13);
-                  ctx.fillStyle = '#475569';
-                  ctx.fillRect(blk.x + blk.w / 2 + 1, blk.y + 4, 1.5, 13);
+                  ctx.fillRect(blk.x + blk.w / 2 - 3, blk.y + 3, 6, 15);
+                  ctx.fillStyle = '#fbbf24';
+                  ctx.fillRect(blk.x + blk.w / 2 - 1.5, blk.y + 5, 3, 11);
                 }
               } else if (blk.mat === 'wood') {
                 ctx.beginPath();
@@ -3475,7 +3736,7 @@
                 ctx.lineTo(blk.x + blk.w - 1, blk.y + blk.h * 0.5);
                 ctx.stroke();
 
-                ctx.fillStyle = '#334155';
+                ctx.fillStyle = '#eab308';
                 ctx.fillRect(blk.x + 3, blk.y + 3, 2.5, 2.5);
                 ctx.fillRect(blk.x + blk.w - 5.5, blk.y + 3, 2.5, 2.5);
               } else {
@@ -3484,9 +3745,13 @@
                 ctx.lineTo(blk.x + blk.w, blk.y + blk.h / 2);
                 ctx.moveTo(blk.x + blk.w * 0.5, blk.y);
                 ctx.lineTo(blk.x + blk.w * 0.5, blk.y + blk.h / 2);
-                ctx.moveTo(blk.x + blk.w * 0.25, blk.y + blk.h / 2);
-                ctx.lineTo(blk.x + blk.w * 0.25, blk.y + blk.h);
                 ctx.stroke();
+              }
+
+              // Gold ornamental cornice band every 3rd row for grandeur
+              if (blk.row === 2 || blk.row === 5) {
+                ctx.fillStyle = k.secondaryColor;
+                ctx.fillRect(blk.x, blk.y, blk.w, 2.2);
               }
 
               if (hpRatio < 0.85 || blk.burnTurns > 0) {
@@ -3509,21 +3774,27 @@
                 ctx.stroke();
               }
 
+              // Hanging Royal Tapestry Banner with gold trim & emblem
               if (blk.hasBanner) {
-                ctx.fillStyle = 'rgba(0,0,0,0.35)';
-                ctx.fillRect(blk.x + 11, blk.y + 3, 16, 17);
+                ctx.fillStyle = 'rgba(0,0,0,0.4)';
+                ctx.fillRect(blk.x + 9, blk.y + 2, 20, 19);
                 ctx.fillStyle = k.primaryColor;
                 ctx.beginPath();
-                ctx.moveTo(blk.x + 10, blk.y + 2);
-                ctx.lineTo(blk.x + 26, blk.y + 2);
-                ctx.lineTo(blk.x + 26, blk.y + 19);
-                ctx.lineTo(blk.x + 18, blk.y + 14);
-                ctx.lineTo(blk.x + 10, blk.y + 19);
+                ctx.moveTo(blk.x + 8, blk.y + 1);
+                ctx.lineTo(blk.x + 28, blk.y + 1);
+                ctx.lineTo(blk.x + 28, blk.y + 20);
+                ctx.lineTo(blk.x + 18, blk.y + 15);
+                ctx.lineTo(blk.x + 8, blk.y + 20);
                 ctx.closePath();
                 ctx.fill();
                 ctx.strokeStyle = k.secondaryColor;
-                ctx.lineWidth = 1;
+                ctx.lineWidth = 1.4;
                 ctx.stroke();
+
+                ctx.fillStyle = k.secondaryColor;
+                ctx.beginPath();
+                ctx.arc(blk.x + 18, blk.y + 9, 3, 0, Math.PI * 2);
+                ctx.fill();
               }
 
               if (blk.burnTurns > 0) {
@@ -3533,50 +3804,59 @@
               }
             }
 
+            // Grand Royal Gatehouse with flanking flaming torches
             const gateCol = side === 0 ? 3 : 2;
             const gateBaseBlock = this.blocks.find(b => b.side === side && b.col === gateCol && b.row === 0 && b.hp > 0);
             if (gateBaseBlock) {
-              const gx = gateBaseBlock.x + 5;
-              const gy = this.groundY - 28;
-              ctx.fillStyle = '#475569';
+              const gx = gateBaseBlock.x + 4;
+              const gy = this.groundY - 30;
+              ctx.fillStyle = k.secondaryColor;
               ctx.beginPath();
-              ctx.arc(gx + 13, gy + 11, 14, Math.PI, 0);
-              ctx.lineTo(gx + 27, this.groundY);
-              ctx.lineTo(gx - 1, this.groundY);
+              ctx.arc(gx + 14, gy + 12, 16, Math.PI, 0);
+              ctx.lineTo(gx + 30, this.groundY);
+              ctx.lineTo(gx - 2, this.groundY);
               ctx.closePath();
               ctx.fill();
 
               ctx.fillStyle = '#0f0a06';
               ctx.beginPath();
-              ctx.arc(gx + 13, gy + 11, 11, Math.PI, 0);
-              ctx.lineTo(gx + 24, this.groundY);
+              ctx.arc(gx + 14, gy + 12, 12, Math.PI, 0);
+              ctx.lineTo(gx + 26, this.groundY);
               ctx.lineTo(gx + 2, this.groundY);
               ctx.closePath();
               ctx.fill();
 
-              ctx.fillStyle = '#1e293b';
-              ctx.beginPath();
-              ctx.moveTo(gx + 2, gy + 11);
-              ctx.lineTo(gx + 6, gy + 9);
-              ctx.lineTo(gx + 6, this.groundY);
-              ctx.lineTo(gx + 2, this.groundY);
-              ctx.closePath();
-              ctx.fill();
-
-              ctx.strokeStyle = '#94a3b8';
-              ctx.lineWidth = 1.4;
+              // Iron portcullis bars
+              ctx.strokeStyle = '#cbd5e1';
+              ctx.lineWidth = 1.5;
               ctx.beginPath();
               ctx.moveTo(gx + 8, gy + 2);
               ctx.lineTo(gx + 8, this.groundY);
-              ctx.moveTo(gx + 13, gy + 1);
-              ctx.lineTo(gx + 13, this.groundY);
-              ctx.moveTo(gx + 18, gy + 2);
-              ctx.lineTo(gx + 18, this.groundY);
+              ctx.moveTo(gx + 14, gy + 1);
+              ctx.lineTo(gx + 14, this.groundY);
+              ctx.moveTo(gx + 20, gy + 2);
+              ctx.lineTo(gx + 20, this.groundY);
               ctx.moveTo(gx + 3, gy + 14);
-              ctx.lineTo(gx + 23, gy + 14);
+              ctx.lineTo(gx + 25, gy + 14);
               ctx.stroke();
+
+              // Twin flickering wall torches beside the gate
+              const flicker = Math.sin(this.animTime * 18 + side) * 1.6;
+              for (const tx of [gx - 4, gx + 32]) {
+                ctx.fillStyle = '#78350f';
+                ctx.fillRect(tx - 1.5, gy + 8, 3, 9);
+                ctx.fillStyle = '#f97316';
+                ctx.beginPath();
+                ctx.arc(tx, gy + 6, 4 + flicker * 0.3, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = '#fef08a';
+                ctx.beginPath();
+                ctx.arc(tx, gy + 6, 2, 0, Math.PI * 2);
+                ctx.fill();
+              }
             }
 
+            // Kingdom-Specific Crown Roofs, Spires, Minarets & Battlements
             const topByCol = {};
             const keepCols = new Set();
             for (const b of this.blocks) {
@@ -3588,8 +3868,91 @@
                 }
               }
             }
+
+            const outerCol = side === 0 ? 0 : 5;
+            const innerCol = side === 0 ? 5 : 0;
+
             Object.values(topByCol).forEach(topBlk => {
               if (keepCols.has(topBlk.col)) return;
+              const isFlankTower = topBlk.col === outerCol || topBlk.col === innerCol;
+
+              // Grand Kingdom Roof Crowns on flanking towers
+              if (isFlankTower) {
+                const cx = topBlk.x + topBlk.w / 2;
+                const ty = topBlk.y;
+                if (k.id === 'osmanli') {
+                  // Slender Ottoman pencil spire with golden crescent finial
+                  ctx.fillStyle = '#334155';
+                  ctx.beginPath();
+                  ctx.moveTo(cx - 14, ty);
+                  ctx.lineTo(cx, ty - 34);
+                  ctx.lineTo(cx + 14, ty);
+                  ctx.closePath();
+                  ctx.fill();
+                  ctx.strokeStyle = '#ffd97d';
+                  ctx.lineWidth = 1.4;
+                  ctx.stroke();
+                  ctx.fillStyle = '#ffd97d';
+                  ctx.beginPath();
+                  ctx.arc(cx, ty - 38, 3.5, 0, Math.PI * 2);
+                  ctx.fill();
+                } else if (k.id === 'bizans') {
+                  // Byzantine golden-trimmed brick cupola dome
+                  ctx.fillStyle = '#6b21a8';
+                  ctx.beginPath();
+                  ctx.arc(cx, ty, 16, Math.PI, 0);
+                  ctx.fill();
+                  ctx.strokeStyle = '#eab308';
+                  ctx.lineWidth = 1.8;
+                  ctx.stroke();
+                  ctx.beginPath();
+                  ctx.moveTo(cx, ty - 16);
+                  ctx.lineTo(cx, ty - 27);
+                  ctx.moveTo(cx - 4, ty - 23);
+                  ctx.lineTo(cx + 4, ty - 23);
+                  ctx.stroke();
+                } else if (k.id === 'kutsal_roma') {
+                  // Steep Gothic slate spire with gold pinnacle
+                  ctx.fillStyle = '#1e3a8a';
+                  ctx.beginPath();
+                  ctx.moveTo(cx - 17, ty);
+                  ctx.lineTo(cx, ty - 38);
+                  ctx.lineTo(cx + 17, ty);
+                  ctx.closePath();
+                  ctx.fill();
+                  ctx.strokeStyle = '#cbd5e1';
+                  ctx.lineWidth = 1.4;
+                  ctx.stroke();
+                  ctx.fillStyle = '#ffd97d';
+                  ctx.fillRect(cx - 1.5, ty - 45, 3, 8);
+                } else if (k.id === 'memluk') {
+                  // Carved Mamluk onion/ribbed desert dome
+                  ctx.fillStyle = '#d97706';
+                  ctx.beginPath();
+                  ctx.moveTo(cx - 15, ty);
+                  ctx.quadraticCurveTo(cx - 18, ty - 18, cx, ty - 28);
+                  ctx.quadraticCurveTo(cx + 18, ty - 18, cx + 15, ty);
+                  ctx.closePath();
+                  ctx.fill();
+                  ctx.strokeStyle = '#fef08a';
+                  ctx.lineWidth = 1.4;
+                  ctx.stroke();
+                } else if (k.id === 'mogol') {
+                  // Mongol war standard & horned iron roof
+                  ctx.fillStyle = '#0369a1';
+                  ctx.beginPath();
+                  ctx.moveTo(cx - 18, ty);
+                  ctx.quadraticCurveTo(cx, ty - 14, cx, ty - 24);
+                  ctx.quadraticCurveTo(cx, ty - 14, cx + 18, ty);
+                  ctx.closePath();
+                  ctx.fill();
+                  ctx.strokeStyle = '#f8fafc';
+                  ctx.lineWidth = 1.3;
+                  ctx.stroke();
+                }
+                return;
+              }
+
               const frontCol = topBlk.mat === 'stone' ? '#cbd5e1' : topBlk.mat === 'wood' ? '#92400e' : '#854d27';
               const topCol = topBlk.mat === 'stone' ? '#e2e8f0' : topBlk.mat === 'wood' ? '#ca8a04' : '#a8673a';
               const sideCol = topBlk.mat === 'stone' ? '#64748b' : topBlk.mat === 'wood' ? '#451a03' : '#3b1f0c';
@@ -3616,20 +3979,20 @@
 
                 ctx.fillStyle = frontCol;
                 ctx.fillRect(mx, my, mw, mh);
-                ctx.strokeStyle = '#1e293b';
-                ctx.lineWidth = 0.9;
+                ctx.strokeStyle = k.secondaryColor;
+                ctx.lineWidth = 0.8;
                 ctx.strokeRect(mx, my, mw, mh);
               };
 
-              draw3DMerlon(topBlk.x + 1, topBlk.y - 8, 10, 8);
-              draw3DMerlon(topBlk.x + topBlk.w - 11, topBlk.y - 8, 10, 8);
+              draw3DMerlon(topBlk.x + 1, topBlk.y - 9, 10, 9);
+              draw3DMerlon(topBlk.x + topBlk.w - 11, topBlk.y - 9, 10, 9);
             });
           }
         }
 
-        _renderRoyalKeepBlock(ctx, blk, kingdom, depthX = 14, depthY = -9) {
-          const kx = blk.x + 3;
-          const kw = blk.w - 6;
+        _renderRoyalKeepBlock(ctx, blk, kingdom, depthX = 15, depthY = -10) {
+          const kx = blk.x + 2;
+          const kw = blk.w - 4;
 
           const sideX = blk.side === 0 ? kx + kw : kx;
           ctx.fillStyle = '#1e293b';
@@ -3642,77 +4005,99 @@
           ctx.fill();
 
           const kGrad = ctx.createLinearGradient(kx, blk.y, kx + kw, blk.y);
-          kGrad.addColorStop(0, '#64748b');
-          kGrad.addColorStop(0.5, '#475569');
+          kGrad.addColorStop(0, '#94a3b8');
+          kGrad.addColorStop(0.5, '#64748b');
           kGrad.addColorStop(1, '#334155');
           ctx.fillStyle = kGrad;
           ctx.fillRect(kx, blk.y, kw, blk.h);
-          ctx.strokeStyle = '#0f172a';
-          ctx.lineWidth = 1;
+          ctx.strokeStyle = kingdom.secondaryColor;
+          ctx.lineWidth = 1.4;
           ctx.strokeRect(kx, blk.y, kw, blk.h);
 
+          // Royal Commander silhouette inside golden throne balcony
           ctx.fillStyle = '#f3c69f';
           ctx.beginPath();
-          ctx.arc(blk.x + blk.w / 2, blk.y + 12, 6, 0, Math.PI * 2);
+          ctx.arc(blk.x + blk.w / 2, blk.y + 13, 6.5, 0, Math.PI * 2);
           ctx.fill();
           ctx.fillStyle = kingdom.primaryColor;
-          ctx.fillRect(blk.x + 10, blk.y + 18, blk.w - 20, 8);
+          ctx.fillRect(blk.x + 9, blk.y + 19, blk.w - 18, 9);
+          ctx.strokeStyle = kingdom.secondaryColor;
+          ctx.lineWidth = 1;
+          ctx.strokeRect(blk.x + 9, blk.y + 19, blk.w - 18, 9);
 
+          // Kingdom-Specific Grand Dome / Royal Canopy
           const domeX = blk.x + blk.w / 2;
-          const domeGrad = ctx.createRadialGradient(domeX - 5, blk.y - 6, 2, domeX, blk.y, 19);
+          const domeGrad = ctx.createRadialGradient(domeX - 5, blk.y - 7, 2, domeX, blk.y, 22);
           domeGrad.addColorStop(0, kingdom.secondaryColor);
-          domeGrad.addColorStop(0.35, kingdom.primaryColor);
+          domeGrad.addColorStop(0.45, kingdom.primaryColor);
           domeGrad.addColorStop(1, '#1e1b4b');
           ctx.fillStyle = domeGrad;
-          ctx.beginPath();
-          ctx.arc(domeX, blk.y, 17, Math.PI, 0);
-          ctx.fill();
+
+          if (kingdom.id === 'kutsal_roma') {
+            // High Gothic Citadel Spire Roof
+            ctx.beginPath();
+            ctx.moveTo(domeX - 20, blk.y);
+            ctx.lineTo(domeX, blk.y - 28);
+            ctx.lineTo(domeX + 20, blk.y);
+            ctx.closePath();
+            ctx.fill();
+          } else if (kingdom.id === 'mogol') {
+            // Imperial Golden Khan Yurt Canopy
+            ctx.beginPath();
+            ctx.moveTo(domeX - 22, blk.y);
+            ctx.lineTo(domeX - 15, blk.y - 12);
+            ctx.lineTo(domeX, blk.y - 22);
+            ctx.lineTo(domeX + 15, blk.y - 12);
+            ctx.lineTo(domeX + 22, blk.y);
+            ctx.closePath();
+            ctx.fill();
+          } else {
+            // Grand Imperial Dome (Ottoman / Byzantine / Mamluk)
+            ctx.beginPath();
+            ctx.arc(domeX, blk.y, 20, Math.PI, 0);
+            ctx.fill();
+          }
           ctx.strokeStyle = kingdom.secondaryColor;
-          ctx.lineWidth = 1.5;
+          ctx.lineWidth = 1.8;
           ctx.stroke();
 
+          // Tall Golden Royal Flagpole & Waving Banner
           const poleX = domeX;
-          const poleTopY = blk.y - 46;
+          const poleTopY = blk.y - 54;
           ctx.strokeStyle = '#fef08a';
-          ctx.lineWidth = 2.4;
+          ctx.lineWidth = 2.6;
           ctx.beginPath();
-          ctx.moveTo(poleX, blk.y - 16);
+          ctx.moveTo(poleX, blk.y - 18);
           ctx.lineTo(poleX, poleTopY);
           ctx.stroke();
 
           ctx.fillStyle = '#ffd97d';
           ctx.beginPath();
-          ctx.arc(poleX, poleTopY - 2, 3, 0, Math.PI * 2);
+          ctx.arc(poleX, poleTopY - 2, 3.5, 0, Math.PI * 2);
           ctx.fill();
 
-          const wave = Math.sin(this.animTime * 6 + blk.side) * 3.5;
+          const wave = Math.sin(this.animTime * 6 + blk.side) * 4;
           const flagDir = blk.side === 0 ? 1 : -1;
           ctx.fillStyle = kingdom.primaryColor;
           ctx.beginPath();
           ctx.moveTo(poleX, poleTopY);
-          ctx.quadraticCurveTo(poleX + flagDir * 18, poleTopY - 3 + wave, poleX + flagDir * 38, poleTopY + wave);
-          ctx.lineTo(poleX + flagDir * 38, poleTopY + 22 + wave);
-          ctx.quadraticCurveTo(poleX + flagDir * 18, poleTopY + 19 + wave, poleX, poleTopY + 22);
+          ctx.quadraticCurveTo(poleX + flagDir * 20, poleTopY - 4 + wave, poleX + flagDir * 44, poleTopY + wave);
+          ctx.lineTo(poleX + flagDir * 44, poleTopY + 25 + wave);
+          ctx.quadraticCurveTo(poleX + flagDir * 20, poleTopY + 21 + wave, poleX, poleTopY + 25);
           ctx.closePath();
           ctx.fill();
-
-          ctx.fillStyle = 'rgba(0, 0, 0, 0.18)';
-          ctx.beginPath();
-          ctx.moveTo(poleX + flagDir * 14, poleTopY);
-          ctx.lineTo(poleX + flagDir * 24, poleTopY + wave * 0.6);
-          ctx.lineTo(poleX + flagDir * 24, poleTopY + 21 + wave * 0.6);
-          ctx.lineTo(poleX + flagDir * 14, poleTopY + 21);
-          ctx.closePath();
-          ctx.fill();
+          ctx.strokeStyle = kingdom.secondaryColor;
+          ctx.lineWidth = 1.2;
+          ctx.stroke();
 
           ctx.fillStyle = kingdom.id === 'osmanli' ? '#ffffff' : kingdom.secondaryColor;
           ctx.beginPath();
-          ctx.arc(poleX + flagDir * 17, poleTopY + 11 + wave * 0.5, 4.5, 0, Math.PI * 2);
+          ctx.arc(poleX + flagDir * 19, poleTopY + 12 + wave * 0.5, 5, 0, Math.PI * 2);
           ctx.fill();
           if (kingdom.id === 'osmanli') {
             ctx.fillStyle = kingdom.primaryColor;
             ctx.beginPath();
-            ctx.arc(poleX + flagDir * 18.5, poleTopY + 11 + wave * 0.5, 3.6, 0, Math.PI * 2);
+            ctx.arc(poleX + flagDir * 20.8, poleTopY + 12 + wave * 0.5, 4, 0, Math.PI * 2);
             ctx.fill();
           }
         }
@@ -3793,7 +4178,7 @@
             : 1.0;
 
           const rad = ((p.angle + angleOffset) * Math.PI) / 180;
-          const spd = (340 + p.power * 6.9) * p.kingdom.speedMult * speedScale;
+          const spd = (395 + p.power * 7.85) * p.kingdom.speedMult * speedScale;
 
           let x = p.catapultX + dir * 24;
           let y = p.catapultY - 46;
@@ -3998,6 +4383,12 @@
           }
         });
 
+        // Mobile Rotate Overlay
+        document.getElementById('rotateOverlayTitle').textContent = t('rotateTitle');
+        document.getElementById('rotateOverlayDesc').textContent = t('rotateDesc');
+        document.getElementById('btnForceLandscape').textContent = t('rotateBtn');
+        document.getElementById('btnDismissRotate').textContent = t('rotateSkip');
+
         // Main Menu
         document.getElementById('menuBadgeText').textContent = t('menuBadge');
         document.getElementById('menuSubtitleText').textContent = t('menuSubtitle');
@@ -4102,9 +4493,9 @@
         document.getElementById('btnRestartBattle').textContent = t('pauseRestart');
         document.getElementById('btnOpenGuideFromPause').textContent = t('pauseGuide');
         document.getElementById('btnExitToMainMenu').textContent = t('pauseExit');
-
-        // Result Modal secondary button
+        // Result Modal secondary & upgrades buttons
         document.getElementById('btnResultSecondary').textContent = t('resultMainMenu');
+        document.getElementById('btnResultUpgrades').textContent = t('resultUpgrades');
 
         renderKingdomSelectors();
         if (!document.getElementById('campaignModal').classList.contains('hidden')) {
@@ -4223,6 +4614,7 @@
                 <span class="text-xs">${unlocked ? ('⭐'.repeat(starsEarned) + '☆'.repeat(3 - starsEarned)) : t('campLocked')}</span>
               </div>
               <p class="text-[11px] text-slate-300">${getChDesc(ch)}</p>
+              <div class="text-[11px] text-sky-300 font-medium">${t('campWeatherLabel')} ${getChWeather(ch)}</div>
               <div class="text-[11px] text-amber-300 font-semibold">${t('campEnemyKingdom')} ${getKFullName(enemyK)} • ${t('campLoot')} +${ch.rewardGold} ${t('goldUnitCap')}</div>
             </div>
             <button id="btnLaunchSelectedChapter" type="button" ${!unlocked ? 'disabled' : ''} class="${unlocked ? 'royal-btn' : 'bg-slate-800 text-slate-500'} px-5 py-2.5 rounded-xl text-xs sm:text-sm shrink-0">
@@ -4404,6 +4796,7 @@
           p2Kingdom: ch.enemyKingdom,
           aiDifficulty: ch.aiDiff,
           windMode: ch.windMode,
+          windSurprise: ch.windSurprise,
           skyTheme: ch.skyTheme,
           castleLayout: ch.castleLayout
         });
@@ -4497,6 +4890,7 @@
 
       function launchBattle(config) {
         sound.unlock();
+        tryAutoLandscapeOnMobile();
         document.getElementById('mainMenuScreen').classList.add('hidden');
         document.getElementById('topHud').classList.remove('hidden');
         document.getElementById('bottomHud').classList.remove('hidden');
@@ -4640,8 +5034,10 @@
 
         const rewardBox = document.getElementById('resultRewardBox');
         const primaryBtn = document.getElementById('btnResultPrimary');
+        const upgradesBtn = document.getElementById('btnResultUpgrades');
 
         if (engine.mode === 'campaign') {
+          upgradesBtn.classList.remove('hidden');
           const ch = CHAPTERS.find(c => c.id === engine.chapterId) || CHAPTERS[0];
           if (p1Won) {
             const reward = ch.rewardGold + starsCount * 10;
@@ -4663,6 +5059,7 @@
             primaryBtn.textContent = t('resultTryAgain');
           }
         } else {
+          upgradesBtn.classList.add('hidden');
           document.getElementById('resultDesc').textContent = t('resultQuickDesc', getKFullName(engine.players[winnerSide].kingdom));
           rewardBox.textContent = t('resultRemainingHp', engine.players[winnerSide].hp);
           primaryBtn.textContent = t('resultPlayAgain');
@@ -4984,7 +5381,11 @@
         engine.activateSkill(2);
       });
 
-      // Precision Aim Buttons
+      document.getElementById('btnFirePrecision').addEventListener('click', () => {
+        sound.unlock();
+        engine.fireCurrentShot();
+      });
+
       document.querySelectorAll('[data-aim]').forEach(btn => {
         btn.addEventListener('click', () => {
           sound.unlock();
@@ -4996,16 +5397,30 @@
         });
       });
 
-      document.getElementById('btnFirePrecision').addEventListener('click', () => {
-        sound.unlock();
-        engine.fireCurrentShot();
-      });
-
-      // Top HUD Menu & Mute
+      // Top HUD Menu, Fullscreen & Mute
       document.getElementById('btnOpenPauseMenu').addEventListener('click', () => {
         engine.paused = true;
         document.getElementById('pauseSubtext').textContent = document.getElementById('battleStageTitle').textContent;
         document.getElementById('pauseModal').classList.remove('hidden');
+      });
+
+      document.getElementById('btnToggleFullscreen').addEventListener('click', () => {
+        sound.unlock();
+        const rootEl = document.documentElement;
+        const fsDoc = document;
+        try {
+          if (!fsDoc.fullscreenElement && !fsDoc.webkitFullscreenElement) {
+            if (rootEl.requestFullscreen) {
+              rootEl.requestFullscreen().catch(() => {});
+            } else if (rootEl.webkitRequestFullscreen) {
+              rootEl.webkitRequestFullscreen();
+            }
+          } else if (fsDoc.exitFullscreen) {
+            fsDoc.exitFullscreen().catch(() => {});
+          } else if (fsDoc.webkitExitFullscreen) {
+            fsDoc.webkitExitFullscreen();
+          }
+        } catch (e) {}
       });
 
       document.getElementById('btnToggleMute').addEventListener('click', () => {
@@ -5041,6 +5456,21 @@
       document.getElementById('btnExitToMainMenu').addEventListener('click', returnToMainMenu);
       document.getElementById('btnResultSecondary').addEventListener('click', returnToMainMenu);
 
+      document.getElementById('btnResultUpgrades').addEventListener('click', () => {
+        closeAllModals();
+        renderCampaignModal();
+        const campModal = document.getElementById('campaignModal');
+        campModal.classList.remove('hidden');
+        const upgSec = document.getElementById('upgradesSection');
+        if (upgSec) {
+          setTimeout(() => {
+            upgSec.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            upgSec.classList.add('ring-2', 'ring-[#ffd97d]');
+            setTimeout(() => upgSec.classList.remove('ring-2', 'ring-[#ffd97d]'), 1800);
+          }, 80);
+        }
+      });
+
       document.getElementById('btnResultPrimary').addEventListener('click', () => {
         closeAllModals();
         if (engine.mode === 'campaign') {
@@ -5062,6 +5492,58 @@
             skyTheme: engine.skyTheme
           });
         }
+      });
+
+      /* -----------------------------------------------------------------------
+       * MOBILE LANDSCAPE DETECTION & AUTO-ORIENTATION HELPER
+       * ----------------------------------------------------------------------- */
+      let rotateOverlayDismissed = false;
+
+      function isMobileTouchDevice() {
+        const hasTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+        const smallScreen = Math.min(window.screen.width || window.innerWidth, window.screen.height || window.innerHeight) < 820;
+        return hasTouch && smallScreen;
+      }
+
+      function checkMobileOrientationPrompt() {
+        const overlay = document.getElementById('rotateDeviceOverlay');
+        if (!overlay) return;
+        if (isMobileTouchDevice() && window.innerHeight > window.innerWidth && !rotateOverlayDismissed) {
+          overlay.classList.remove('hidden');
+        } else {
+          overlay.classList.add('hidden');
+        }
+      }
+
+      async function tryAutoLandscapeOnMobile() {
+        if (!isMobileTouchDevice()) return;
+        try {
+          const rootEl = document.documentElement;
+          if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+            if (rootEl.requestFullscreen) {
+              await rootEl.requestFullscreen().catch(() => {});
+            } else if (rootEl.webkitRequestFullscreen) {
+              rootEl.webkitRequestFullscreen();
+            }
+          }
+          if (screen.orientation && screen.orientation.lock) {
+            await screen.orientation.lock('landscape').catch(() => {});
+          }
+        } catch (e) {}
+        setTimeout(() => {
+          checkMobileOrientationPrompt();
+          if (engine) engine.render();
+        }, 150);
+      }
+
+      document.getElementById('btnForceLandscape').addEventListener('click', () => {
+        sound.unlock();
+        tryAutoLandscapeOnMobile();
+      });
+
+      document.getElementById('btnDismissRotate').addEventListener('click', () => {
+        rotateOverlayDismissed = true;
+        document.getElementById('rotateDeviceOverlay').classList.add('hidden');
       });
 
       // Desktop Keyboard Shortcuts
@@ -5091,8 +5573,22 @@
 
       window.onload = function () {
         applyLanguage(currentLang, false);
+        checkMobileOrientationPrompt();
+        tryAutoLandscapeOnMobile();
         requestAnimationFrame(gameLoop);
       };
+
+      window.addEventListener('resize', () => {
+        checkMobileOrientationPrompt();
+        if (engine) engine.render();
+      });
+
+      window.addEventListener('orientationchange', () => {
+        setTimeout(() => {
+          checkMobileOrientationPrompt();
+          if (engine) engine.render();
+        }, 120);
+      });
     })();
   </script>
 </body>
