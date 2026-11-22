@@ -345,7 +345,7 @@
           <div class="flex-1 min-w-0">
             <div class="flex items-center justify-between gap-1">
               <span id="p1NameLabel" class="font-royal font-bold text-[11px] sm:text-sm tracking-wide text-[#f8e3b4] truncate">OSMANLI</span>
-              <span id="p1HpText" class="text-[10px] sm:text-xs font-bold text-emerald-300 shrink-0">240/240</span>
+              <span id="p1HpText" class="text-[10px] sm:text-xs font-bold text-emerald-300 shrink-0">480/480</span>
             </div>
             <div class="w-full h-2 sm:h-2.5 bg-[#0b0918] rounded-full overflow-hidden border border-[#5c4928] mt-0.5">
               <div id="p1HpBar" class="h-full bg-gradient-to-r from-emerald-500 via-lime-400 to-amber-300 transition-all duration-300" style="width: 100%"></div>
@@ -381,7 +381,7 @@
         <div class="col-span-4 sm:col-span-5 flex items-center justify-end gap-2 sm:gap-3">
           <div class="flex-1 min-w-0 text-right">
             <div class="flex items-center justify-between gap-1">
-              <span id="p2HpText" class="text-[10px] sm:text-xs font-bold text-emerald-300 shrink-0">240/240</span>
+              <span id="p2HpText" class="text-[10px] sm:text-xs font-bold text-emerald-300 shrink-0">480/480</span>
               <span id="p2NameLabel" class="font-royal font-bold text-[11px] sm:text-sm tracking-wide text-[#f8e3b4] truncate">BİZANS</span>
             </div>
             <div class="w-full h-2 sm:h-2.5 bg-[#0b0918] rounded-full overflow-hidden border border-[#5c4928] mt-0.5">
@@ -497,7 +497,7 @@
 
             <button id="btnUpgradeSiegeHud" type="button" class="royal-card border-amber-400/70 rounded-lg px-2 sm:px-3 py-1.5 text-left flex flex-col justify-between min-h-[44px] max-w-[175px] flex-1">
               <span id="siegeHudName" class="font-bold text-[10px] sm:text-xs text-amber-300 tracking-wide leading-tight truncate">⚙️ SV.1 MANCINIK</span>
-              <span id="siegeHudSub" class="text-[9px] sm:text-[11px] text-emerald-300 leading-tight truncate">Yükselt (24 altın)</span>
+              <span id="siegeHudSub" class="text-[9px] sm:text-[11px] text-emerald-300 leading-tight truncate">Yükselt (150 altın)</span>
             </button>
           </div>
 
@@ -1139,17 +1139,19 @@
           campUnlockPrev: '🔒 Önceki Bölümü Fethet',
           campUpgradesHeader: '⚒️ Kalıcı Krallık Geliştirmeleri (4 Kademeli Kuşatma Dahil)',
           campUpgrades: [
-            { key: 'siegeEngine', title: 'Kuşatma Silahı Modeli', desc: 'Mancınık → Trebuchet → Tunç Top (Top Güllesi & Şahi açılır!) → Şahi Bataryası', baseCost: 35, maxLvl: 3 },
-            { key: 'power', title: 'Barut & Mancınık Gücü', desc: 'Tüm saldırı hasarı +%8', baseCost: 30, maxLvl: 4 },
-            { key: 'treasury', title: 'Başlangıç Hazinesi', desc: 'Savaş başı +10 Altın', baseCost: 25, maxLvl: 4 },
-            { key: 'fortress', title: 'Sur Dayanıklılığı', desc: 'Kale maksimum HP +30', baseCost: 30, maxLvl: 4 }
+            { key: 'siegeEngine', title: 'Kuşatma Silahı Modeli', desc: 'Sv.2 Trebuchet (150) → Sv.3 Tunç Top (300) → Sv.4 Şahi Bataryası (450)', baseCost: 150, maxLvl: 3 },
+            { key: 'power', title: 'Barut & Mancınık Gücü', desc: 'Tüm saldırı hasarı +%10', baseCost: 60, maxLvl: 4 },
+            { key: 'treasury', title: 'Başlangıç Hazinesi', desc: 'Savaş başı +25 Altın', baseCost: 50, maxLvl: 4 },
+            { key: 'fortress', title: 'Sur Dayanıklılığı', desc: 'Kale maksimum HP +55', baseCost: 55, maxLvl: 4 }
           ],
           campLvl: (l, m) => `Sv. ${l}/${m}`,
           campMaxLvl: 'Maksimum Seviye',
           campUpgradeBtn: (c) => `Geliştir (${c} Altın)`,
-          // Setup Modal
+          campWeatherLabel: 'Hava:',
+          toastCampGoldLow: 'Sefer hazinesinde yeterli altın yok!',
+          toastUpgradeDone: (title, lvl) => `${title} Sv. ${lvl} seviyesine yükseltildi!`,
           setupQuickTitle: '⚔️ Hızlı Savaş Ayarları',
-          setupLocalTitle: '👥 2 Oyuncu Düello Ayarları',
+          setupLocalTitle: '👥 2 Oyuncu (Aynı Cihaz) Ayarları',
           setupEnemyLabel: 'Rakip / 2. Oyuncu Krallığı',
           setupDiffLabel: 'Zorluk Seviyesi',
           diffEasy: 'Acemi',
@@ -1160,7 +1162,6 @@
           windNormal: 'Değişken',
           windStorm: 'Fırtınalı',
           setupStartBtn: 'SAVAŞI BAŞLAT ⚔️',
-          // Online Modal
           onlineTitle: 'ONLINE ARENA',
           onlineSub: 'Oda kodu oluştur veya arkadaşına katılarak online savaş',
           onlineInfoHTML: '<strong>Online Düello:</strong> Oda kurduğunda oluşan <strong>5 haneli kodu</strong> arkadaşına gönder, anında karşılıklı bağlanıp oynayın.',
@@ -1176,74 +1177,66 @@
           onlineCopy: 'Kopyala',
           onlineDemoHint: 'Tek başına online maç akışını denemek istersen:',
           onlineDemoBtn: '⚡ Demo Online Simülasyon',
-          // Pause Modal
+          toastEnterRoomCode: 'Lütfen 5 haneli oda kodunu girin!',
+          toastLobbyWaiting: (code) => `Oda ${code} hazır! Rakip bekleniyor...`,
+          toastRoomReady: (code) => `Oda ${code} kuruldu! Kodu arkadaşına gönder.`,
+          toastOpponentJoined: (name) => `Rakip katıldı: ${name}! Savaş başlıyor!`,
+          toastOpponentLeft: 'Rakip bağlantısı kesildi!',
+          toastCodeCopied: 'Oda kodu panoya kopyalandı!',
+          toastJoinedRoom: 'Odaya başarıyla bağlanıldı!',
+          toastDemoStarted: 'Demo Online Simülasyon başlatıldı!',
           pauseTitle: 'Savaş Menüsü',
           pauseLang: 'Dil:',
           pauseResume: 'Savaşa Devam Et',
           pauseRestart: 'Bölümü Yeniden Başlat',
           pauseGuide: 'Oyunun Amacı & Rehber',
           pauseExit: 'Ana Menüye Dön',
-          // Result Modal
-          resultWinTitle: 'ZAFER SENİN!',
-          resultLoseTitle: 'KUŞATMA KAYBEDİLDİ',
-          resultLocalWin: (name) => `${name} KAZANDI!`,
-          resultCampWinDesc: (name) => `${name} fethedildi! Sancak burçlara çekildi.`,
-          resultCampWinReward: (rew, tot) => `Sefer Ganimeti: +${rew} Altın (Toplam: ${tot})`,
-          resultNextChapter: 'Sonraki Bölüm ➔',
-          resultConquestMap: 'Fetih Haritası',
-          resultCampLoseDesc: 'Kalemiz düştü! Atölyeden surlarını güçlendirip tekrar saldırabilirsin.',
-          resultCampLoseReward: 'Teselli Ganimeti: +10 Altın',
-          resultTryAgain: 'Tekrar Dene',
-          resultUpgrades: '⚒️ Geliştirmeler',
-          resultQuickDesc: (name) => `${name} meydan muharebesinden zaferle ayrıldı!`,
-          resultRemainingHp: (hp) => `Kalan Kale Canı: ${hp} HP`,
-          resultPlayAgain: 'Yeniden Oyna',
-          resultMainMenu: 'Ana Menü',
-          // Mobile Portrait Rotate Overlay & Weather Surprises
           rotateTitle: 'TELEFONU YAN ÇEVİRİN',
           rotateDesc: 'İki kaleyi ve tüm kuşatma meydanını tam genişlikte görmek için cihazınızı yatay konuma çevirin.',
           rotateBtn: '⛶ Tam Ekran & Yatay Aç',
           rotateSkip: 'Şimdilik devam et',
-          campWeatherLabel: 'Hava Koşulu:',
-          windSurpriseBreeze: '🍃 VADİ ESİNTİSİ!',
-          windSurpriseGust: '🌬️ RÜZGAR YÖN DEĞİŞTİRDİ!',
-          windSurpriseSandstorm: '🌪️ ANİ KUM FIRTINASI!',
-          windSurpriseCalm: '☀️ FIRTINA DİNDİ (RÜZGARSIZ)',
-          windSurpriseStorm: '⛈️ ŞİDDETLİ KASIRGA!',
-          // Floating Canvas & Toasts
-          floatMehter: 'MEHTER MARŞI! +25% HASAR',
-          floatShield: 'KUTSAL KALKAN AKTİF!',
-          floatSandstorm: 'KUM FIRTINASI KOPTU!',
+          resultWinTitle: 'ZAFER!',
+          resultLoseTitle: 'YENİLGİ',
+          resultLocalWin: (name) => `${name} KAZANDI!`,
+          resultUpgrades: '⚒️ Geliştirmeler',
+          resultCampWinDesc: (chShort) => `${chShort} fethedildi ve Kraliyet Sancağı burçlara çekildi!`,
+          resultCampWinReward: (rew, tot) => `Ganimet: +${rew} Altın • Sefer Hazinesi: ${tot} Altın`,
+          resultNextChapter: 'Sonraki Bölüm ➔',
+          resultConquestMap: 'Fetih Haritası',
+          resultMainMenu: 'Ana Menü',
+          resultCampLoseDesc: 'Kalemiz düştü! Atölyeden surlarını güçlendirip tekrar saldırabilirsin.',
+          resultCampLoseReward: 'Teselli Ganimeti: +25 Altın',
+          resultTryAgain: 'Tekrar Dene',
+          resultQuickDesc: (name) => `${name} ordusu düşman surlarını yerle bir ederek savaşı kazandı!`,
+          resultRemainingHp: (hp) => `Kalan Kale Dayanıklılığı: ${hp} HP`,
+          resultPlayAgain: 'Tekrar Oyna',
+          toastLangChanged: 'Dil Türkçe olarak ayarlandı',
+          toastMuted: 'Sesler kapatıldı',
+          toastUnmuted: 'Sesler açıldı',
+          toastInsufficientGold: (c) => `Yetersiz altın! (${c} altın gerekli)`,
+          toastRepairGold: 'Onarım için 12 altın gerekli!',
+          toastCooldown: (name, cd) => `${name} için ${cd} tur bekleme süresi var!`,
+          toastMehterActive: 'Mehter Marşı etkisi zaten aktif!',
+          toastMehterPlayed: 'Mehter Marşı çalındı! Sonraki saldırı +%25 güçlü!',
+          toastSkillLoaded: (name) => `${name} yüklendi! Nişan alıp ateşle!`,
           floatRepair: (amt) => `+${amt} ONARIM`,
-          floatCrit: (dmg) => `KRİTİK! -${dmg}`,
-          floatLoot: (g) => `+${g} GANİMET`,
-          floatBurn: (dmg) => `YANMA! -${dmg}`,
-          toastInsufficientGold: (cost) => `Yetersiz Altın! (${cost} Altın gerekli)`,
-          toastCooldown: (name, cd) => `${name} hazırlanıyor (${cd} tur kaldı)`,
-          toastMehterActive: 'Mehter Marşı zaten aktif!',
-          toastMehterPlayed: 'Mehter Marşı çalındı! Sonraki atış +25% güçlü!',
-          toastSkillLoaded: (name) => `${name} yüklendi! Nişan al ve ateş et.`,
-          toastRepairGold: 'Onarım için 12 Altın gerekli!',
-          toastCampGoldLow: 'Sefer Hazinesi yetersiz! Bölüm kazanarak altın topla.',
-          toastUpgradeDone: (title, lvl) => `${title} Seviye ${lvl} oldu!`,
-          toastRoomReady: (code) => `Oda kuruldu! Kod: ${code}`,
-          toastLobbyWaiting: (code) => `Oda Hazır (${code})! Arkadaşının bağlanması bekleniyor...`,
-          toastOpponentJoined: (name) => `Rakip bağlandı (${name})! Savaş başlıyor!`,
-          toastEnterRoomCode: 'Lütfen arkadaşının paylaştığı oda kodunu girin (Örn: WB482).',
-          toastJoinedRoom: 'Odaya bağlanıldı! Ev sahibinin atışı bekleniyor...',
-          toastCodeCopied: 'Oda Kodu kopyalandı!',
-          toastCopyManual: 'Kodu seçip kopyalayabilirsiniz.',
-          toastDemoStarted: 'Demo Online Arena başlatıldı!',
-          toastMuted: 'Ses kapatıldı',
-          toastUnmuted: 'Ses açıldı',
-          toastOpponentLeft: 'Rakibin bağlantısı kesildi!',
-          toastLangChanged: 'Dil Türkçe olarak ayarlandı'
+          floatMehter: 'MEHTER COŞKUSU (+%25)',
+          floatShield: 'KUTSAL KALKAN AKTİF',
+          floatSandstorm: 'KUM FIRTINASI!',
+          floatCrit: (dmg) => `KRİTİK -${dmg}!`,
+          floatLoot: (g) => `+${g} ALTIN`,
+          floatBurn: (dmg) => `YANMA -${dmg}`,
+          windSurpriseBreeze: '🌬️ Ani Meltem!',
+          windSurpriseStorm: '⛈️ Fırtına Yön Değiştirdi!',
+          windSurpriseGust: '🌊 Boğaz Akıntısı Rüzgarı!',
+          windSurpriseSandstorm: '🏜️ Çöl Kum Fırtınası!',
+          windSurpriseCalm: '⛰️ Dağ Kuytusu: Rüzgar Durdu!'
         },
         en: {
           docTitle: 'War Ball: Siege of Kingdoms',
           btnInstallApp: 'Install iOS / Android App',
-          pwaModalTitle: '📲 iOS & ANDROID MOBILE APP INSTALL',
-          pwaIntro: 'Install <strong>War Ball: Siege of Kingdoms</strong> as a full-screen mobile app (PWA) on your phone or download the standalone app file directly:',
+          pwaModalTitle: '📲 iOS & ANDROID APP INSTALL',
+          pwaIntro: 'Install <strong>War Ball: Siege of Kingdoms</strong> as a full-screen mobile app (PWA) or download the standalone file:',
           pwaNativeInstall: 'Install App to Device Now',
           pwaDownloadFile: 'Download App File (WarBall-Mobile.html)',
           pwaInstalledToast: '🎉 App installed to your home screen!',
@@ -1251,23 +1244,23 @@
           menuBadge: 'HISTORICAL CASTLE SIEGE',
           menuSubtitle: 'Siege of Kingdoms',
           selectKingdom: '1. Choose Your Kingdom',
-          allKingdomFeatures: 'All Kingdom Abilities',
+          allKingdomFeatures: 'All Kingdom Traits',
           modeCampaignTitle: '🏰 CONQUEST CAMPAIGN (6 CHAPTERS)',
           modeCampaignDesc: 'March from Border Outpost to Imperial Citadel & upgrade',
           modeQuickTitle: '⚔️ QUICK BATTLE',
-          modeQuickDesc: 'Pick an enemy kingdom and difficulty for a duel',
+          modeQuickDesc: 'Choose rival kingdom and difficulty for a custom duel',
           modeLocalTitle: '👥 2 PLAYERS (SAME DEVICE)',
-          modeLocalDesc: 'Take turns battling a friend on the same phone or PC',
+          modeLocalDesc: 'Pass-and-play battle with a friend on one device',
           modeOnlineTitle: '🌐 ONLINE ARENA',
-          modeOnlineDesc: 'Duel a friend live using a 5-character room code',
-          btnObjective: 'Game Objective & War Guide',
-          menuMotto: '⚜️ Banners to the Skies, Walls to the Ground!',
+          modeOnlineDesc: 'Connect with a 5-character room code for live duels',
+          btnObjective: 'Game Objective & Battle Guide',
+          menuMotto: '⚜️ Banners High, Ramparts Shattered!',
           hudMenu: 'MENU',
           windNone: 'No wind',
           hudAngle: 'Angle',
           hudPower: 'Power',
           hudFire: 'FIRE!',
-          touchHint: 'Drag across the screen to aim and release!',
+          touchHint: 'Drag on screen to aim and release!',
           wepStone: 'STONE',
           wepFireball: 'FIREBALL',
           wepTriple: 'TRIPLE SALVO',
@@ -1277,11 +1270,11 @@
           goldUnit: 'gold',
           goldUnitCap: 'Gold',
           readyFree: 'ready • free',
-          cooldownTurns: (n) => `cooldown: ${n}t`,
+          cooldownTurns: (n) => `cooldown: ${n} turns`,
           treasuryLabel: 'War treasury:',
           turnPrefix: 'TURN:',
           waitingOpponent: (name) => `WAITING FOR ${name}...`,
-          aiAiming: (name) => `${name} IS AIMING...`,
+          aiAiming: (name) => `${name} AIMING...`,
           quickBattleTitle: 'QUICK BATTLE',
           local2pTitle: '2-PLAYER DUEL',
           onlineArenaTitle: 'ONLINE ARENA',
@@ -1289,64 +1282,60 @@
           roomLabel: (code) => `Room: ${code}`,
           passiveLabel: 'Passive:',
           abilitiesLabel: 'Abilities:',
-          // 4-Tier Siege System
           siegeTiers: [
-            { name: 'Wooden Catapult', short: 'LV.1 CATAPULT', desc: 'Basic torsion catapult. Cannot fire Cannonballs or Basilica Cannons.' },
-            { name: 'Heavy Trebuchet', short: 'LV.2 TREBUCHET', desc: 'Counterweight siege engine (+8% range, +10% damage, Grand Trebuchet unlocked).' },
-            { name: 'Bronze Siege Cannon', short: 'LV.3 CANNON', desc: 'Gunpowder artillery! CANNONBALL & BASILICA CANNON unlocked (+15% damage)!' },
-            { name: 'Imperial Basilica Bombard', short: 'LV.4 BASILICA', desc: 'Armored grand bombard (+22% artillery damage, -4 gold heavy ammo discount).' }
+            { name: 'Wooden Catapult', short: 'LV.1 CATAPULT', desc: 'Starter siege catapult. Cannot fire Cannonballs or Basilica Bombards.' },
+            { name: 'Heavy Trebuchet', short: 'LV.2 TREBUCHET', desc: 'Counterweight trebuchet (+8% range, +10% damage, unlocks Grand Trebuchet).' },
+            { name: 'Bronze Siege Cannon', short: 'LV.3 CANNON', desc: 'Gunpowder artillery! Unlocks CANNONBALL & BASILICA / POWDER KEG (+15% dmg)!' },
+            { name: 'Imperial Basilica Battery', short: 'LV.4 BASILICA', desc: 'Armored grand bombard (+22% artillery dmg, -4 gold discount on heavy ammo).' }
           ],
-          siegeLockedCannon: '🔒 Upgrade your siege engine to Lv. 3 Bronze Cannon to fire Cannonballs!',
+          siegeLockedCannon: '🔒 Upgrade your siege engine to Lv.3 Bronze Cannon to fire Cannonballs!',
           siegeLockedSkill: (skName, reqTier) => `🔒 Upgrade your siege engine to ${reqTier} to use ${skName}!`,
           siegeMaxed: 'Max Model',
           siegeUpgradeBtn: (cost) => `Upgrade (${cost} gold)`,
-          siegeUpgradedToast: (name) => `⚙️ Siege engine upgraded to: ${name}!`,
+          siegeUpgradedToast: (name) => `⚙️ Siege engine upgraded: ${name}!`,
           setupSiegeLabel: 'Starting Siege Engine Model (4 Tiers)',
-          // Story modal
           storySubBadge: 'Pre-Battle Parley',
-          storyLeftRole: 'Siege Army',
-          storyRightRole: 'Castle Garrison',
-          storySkip: 'Skip Dialogue ⏭',
+          storyLeftRole: 'Besieging Host',
+          storyRightRole: 'Fortress Garrison',
+          storySkip: 'Skip Parley ⏭',
           storyNext: 'Continue ➔',
-          storyStartBattle: 'Start Battle! ⚔️',
-          // Online Chat
+          storyStartBattle: 'Start Siege! ⚔️',
           chatToggle: 'Battle Chat',
-          chatHeader: '💬 Frontline Comms',
+          chatHeader: '💬 Frontline Dispatch',
           chatEmpty: 'Send a war cry or message to your rival...',
-          chatPlaceholder: 'Type your message...',
+          chatPlaceholder: 'Write a message...',
           chatSend: 'Send',
           chatReadyLine: 'Comms established! You can message your opponent.',
           taunts: [
-            { label: '👏 Great shot!', text: 'Great shot!' },
-            { label: '🔥 Your walls will fall!', text: 'Your walls will fall!' },
-            { label: '💣 Incoming cannon!', text: 'Basilica cannon incoming!' },
-            { label: '🏳️ Surrender!', text: 'Surrender now!' }
+            { label: '👏 Fine shot!', text: 'Fine shot!' },
+            { label: '🔥 Your walls will crumble!', text: 'Your walls will crumble!' },
+            { label: '💣 Bombard incoming!', text: 'Basilica cannon incoming!' },
+            { label: '🏳️ Surrender now!', text: 'Surrender now!' }
           ],
-          demoReplies: ['I accept your challenge!', 'Your fortress will crumble soon!', 'Sharp aim, commander!'],
-          // Guide Modal
-          guideTitle: '📜 Game Objective & Kingdom Codex',
+          demoReplies: ['I accept your challenge!', 'Your walls will fall soon!', 'Well aimed, commander!'],
+          guideTitle: '📜 Game Objective & Kingdom Guide',
           guideBodyHTML: `
             <div class="p-3.5 rounded-xl bg-[#120f26] border border-[#8c6f3e]/50">
-              <h3 class="font-royal font-bold text-[#ffd97d] text-sm mb-1">🎯 Primary Objective</h3>
+              <h3 class="font-royal font-bold text-[#ffd97d] text-sm mb-1">🎯 Core Objective</h3>
               <p>
-                Demolish the enemy kingdom's walls, cut-stone towers, and <strong>Royal Banner Keep</strong> using catapults and siege cannons to reduce enemy castle HP to <strong>0</strong>. Every hit earns gold to upgrade your siege engine, buy deadlier ordnance, or repair your fortress.
+                Demolish the rival kingdom's ramparts, stone towers, and <strong>Royal Banner Keep</strong> using cannon and catapult fire to reduce enemy fortress HP to <strong>0</strong>. Every hit earns gold for your War Treasury so you can upgrade your siege engine, buy stronger ammunition, or repair your castle.
               </p>
             </div>
             <div class="p-3.5 rounded-xl bg-[#120f26] border border-[#8c6f3e]/50">
-              <h3 class="font-royal font-bold text-[#ffd97d] text-sm mb-1">⚙️ 4-Tier Siege Engine System</h3>
+              <h3 class="font-royal font-bold text-[#ffd97d] text-sm mb-1">⚙️ 4-Tier Siege Engine Progression</h3>
               <ul class="list-disc pl-4 space-y-1 text-slate-300">
-                <li><strong>Lv. 1 Wooden Catapult:</strong> Starting engine. Fires Stones, Fireballs, and Triple Salvo; cannot fire Cannonballs or Basilica Cannons.</li>
-                <li><strong>Lv. 2 Heavy Trebuchet:</strong> Counterweight engine (+8% range, +10% damage, unlocks Grand Trebuchet).</li>
-                <li><strong>Lv. 3 Bronze Siege Cannon:</strong> Gunpowder artillery! Unlocks <strong>CANNONBALL</strong> and <strong>BASILICA CANNON / POWDER KEG</strong> (+15% damage).</li>
-                <li><strong>Lv. 4 Imperial Basilica Bombard:</strong> Armored grand bombard (+22% damage and -4 gold discount on heavy artillery ammo).</li>
+                <li><strong>Lv.1 Wooden Catapult:</strong> Starter siege engine. Fires Stone, Fireball, and Triple Salvo; Cannonballs and Basilica Bombards are locked.</li>
+                <li><strong>Lv.2 Heavy Trebuchet:</strong> Counterweight giant trebuchet (+8% range, +10% damage, unlocks Grand Trebuchet).</li>
+                <li><strong>Lv.3 Bronze Siege Cannon:</strong> Gunpowder barrel artillery! Unlocks <strong>CANNONBALL</strong> and <strong>BASILICA / POWDER KEG</strong> (+15% damage).</li>
+                <li><strong>Lv.4 Imperial Basilica Battery:</strong> Armored grand bombard (+22% damage and -4 gold discount on heavy artillery shells).</li>
               </ul>
             </div>
             <div class="p-3.5 rounded-xl bg-[#120f26] border border-[#8c6f3e]/50">
               <h3 class="font-royal font-bold text-[#ffd97d] text-sm mb-1">🎯 Aiming & Wind Physics</h3>
               <ul class="list-disc pl-4 space-y-1 text-slate-300">
-                <li><strong>Touch / Mouse:</strong> Drag backwards and downwards to adjust angle and power, then release to fire.</li>
-                <li><strong>Precision Controls:</strong> Use <strong>▲ / ▼</strong> and <strong>+ / −</strong> buttons at the bottom-left and press <strong>FIRE!</strong></li>
-                <li><strong>Royal Keep Critical:</strong> Striking the banner-crowned keep deals <strong>+45% critical damage</strong>!</li>
+                <li><strong>Touch / Mouse:</strong> Drag backward and downward to set angle and power, release to fire.</li>
+                <li><strong>Precision Controls:</strong> Use bottom-left <strong>▲ / ▼</strong> and <strong>+ / −</strong> buttons to fine-tune and press <strong>FIRE!</strong>.</li>
+                <li><strong>Royal Keep Critical:</strong> Striking the banner-bearing top keep deals <strong>+45% critical damage</strong>!</li>
               </ul>
             </div>
             <div>
@@ -1354,33 +1343,34 @@
               <div id="codexKingdomList" class="space-y-2"></div>
             </div>
           `,
-          // Campaign Modal
-          campTitle: '🗺️ Conquest Campaign Map & Royal Workshop',
-          campSub: 'Advance along the campaign trail, conquer fortresses, and upgrade your kingdom',
+          campTitle: '🗺️ Conquest Campaign Map & Kingdom Workshop',
+          campSub: 'Advance across the campaign route, conquer castles, and upgrade your army',
           campTreasury: 'Campaign Treasury:',
           campRouteTitle: '🧭 CONQUEST ROUTE (1 → 6)',
-          campRouteHint: 'Click a fortress to besiege',
+          campRouteHint: 'Click an unlocked fortress to besiege',
           campLocked: '🔒 Locked',
-          campEnemyKingdom: 'Enemy Kingdom:',
+          campEnemyKingdom: 'Rival Kingdom:',
           campLoot: 'Loot:',
           campStartSiege: '⚔️ Launch Siege',
           campUnlockPrev: '🔒 Conquer Previous Chapter',
           campUpgradesHeader: '⚒️ Permanent Kingdom Upgrades (Includes 4-Tier Siege Engine)',
           campUpgrades: [
-            { key: 'siegeEngine', title: 'Siege Engine Model', desc: 'Catapult → Trebuchet → Bronze Cannon (Unlocks Cannonball & Basilica!) → Imperial Bombard', baseCost: 35, maxLvl: 3 },
-            { key: 'power', title: 'Gunpowder & Catapult Power', desc: 'All attack damage +8%', baseCost: 30, maxLvl: 4 },
-            { key: 'treasury', title: 'Starting Treasury', desc: '+10 Gold at battle start', baseCost: 25, maxLvl: 4 },
-            { key: 'fortress', title: 'Wall Fortification', desc: 'Max Castle HP +30', baseCost: 30, maxLvl: 4 }
+            { key: 'siegeEngine', title: 'Siege Engine Model', desc: 'Lv.2 Trebuchet (150) → Lv.3 Bronze Cannon (300) → Lv.4 Basilica Bombard (450)', baseCost: 150, maxLvl: 3 },
+            { key: 'power', title: 'Gunpowder & Catapult Power', desc: 'All attack damage +10%', baseCost: 60, maxLvl: 4 },
+            { key: 'treasury', title: 'Starting Treasury', desc: '+25 Gold at battle start', baseCost: 50, maxLvl: 4 },
+            { key: 'fortress', title: 'Wall Fortification', desc: 'Max Castle HP +55', baseCost: 55, maxLvl: 4 }
           ],
           campLvl: (l, m) => `Lv. ${l}/${m}`,
           campMaxLvl: 'Max Level',
           campUpgradeBtn: (c) => `Upgrade (${c} Gold)`,
-          // Setup Modal
-          setupQuickTitle: '⚔️ Quick Battle Setup',
-          setupLocalTitle: '👥 2-Player Duel Setup',
-          setupEnemyLabel: 'Opponent / Player 2 Kingdom',
-          setupDiffLabel: 'Difficulty Level',
-          diffEasy: 'Recruit',
+          campWeatherLabel: 'Weather:',
+          toastCampGoldLow: 'Not enough gold in campaign treasury!',
+          toastUpgradeDone: (title, lvl) => `${title} upgraded to Lv. ${lvl}!`,
+          setupQuickTitle: '⚔️ Quick Battle Settings',
+          setupLocalTitle: '👥 2-Player (Same Device) Settings',
+          setupEnemyLabel: 'Rival / Player 2 Kingdom',
+          setupDiffLabel: 'AI Difficulty',
+          diffEasy: 'Novice',
           diffNormal: 'Commander',
           diffHard: 'Emperor',
           setupWindLabel: 'Wind Conditions',
@@ -1388,127 +1378,592 @@
           windNormal: 'Variable',
           windStorm: 'Stormy',
           setupStartBtn: 'START BATTLE ⚔️',
-          // Online Modal
           onlineTitle: 'ONLINE ARENA',
-          onlineSub: 'Create a room code or join a friend for an online duel',
-          onlineInfoHTML: '<strong>Online Duel:</strong> Create a room and share the <strong>5-character code</strong> with your friend to connect and battle instantly.',
+          onlineSub: 'Create a room code or join a friend for online siege battles',
+          onlineInfoHTML: '<strong>Online Duel:</strong> Share the generated <strong>5-character room code</strong> with your friend to battle live.',
           onlineHostTitle: '1. Create Room (Host)',
-          onlineHostDesc: 'Generates a unique 5-character battle room code for you.',
+          onlineHostDesc: 'Generates a unique 5-character battle room code.',
           onlineHostBtn: 'Create Room',
           onlineCreatingBtn: 'Creating Room...',
           onlineJoinTitle: '2. Join Room (Guest)',
-          onlineJoinPlaceholder: 'Ex: WB482',
+          onlineJoinPlaceholder: 'e.g. WB482',
           onlineJoinBtn: 'Join Room',
           onlineJoiningBtn: 'Connecting...',
           onlineCancel: 'Cancel',
           onlineCopy: 'Copy',
           onlineDemoHint: 'Want to test the online match flow solo?',
           onlineDemoBtn: '⚡ Demo Online Simulation',
-          // Pause Modal
+          toastEnterRoomCode: 'Please enter a 5-character room code!',
+          toastLobbyWaiting: (code) => `Room ${code} ready! Waiting for opponent...`,
+          toastRoomReady: (code) => `Room ${code} created! Share the code with your friend.`,
+          toastOpponentJoined: (name) => `Opponent joined: ${name}! Battle starting!`,
+          toastOpponentLeft: 'Opponent disconnected!',
+          toastCodeCopied: 'Room code copied to clipboard!',
+          toastJoinedRoom: 'Connected to room successfully!',
+          toastDemoStarted: 'Demo Online Simulation started!',
           pauseTitle: 'Battle Menu',
           pauseLang: 'Language:',
           pauseResume: 'Resume Battle',
           pauseRestart: 'Restart Chapter',
-          pauseGuide: 'Objective & War Guide',
+          pauseGuide: 'Objective & Guide',
           pauseExit: 'Return to Main Menu',
-          // Result Modal
-          resultWinTitle: 'VICTORY IS YOURS!',
-          resultLoseTitle: 'SIEGE DEFEATED',
-          resultLocalWin: (name) => `${name} WINS!`,
-          resultCampWinDesc: (name) => `${name} has been conquered! Your banner flies over the battlements.`,
-          resultCampWinReward: (rew, tot) => `Campaign Loot: +${rew} Gold (Total: ${tot})`,
-          resultNextChapter: 'Next Chapter ➔',
-          resultConquestMap: 'Conquest Map',
-          resultCampLoseDesc: 'Our fortress has fallen! Upgrade your walls in the workshop and strike again.',
-          resultCampLoseReward: 'Consolation Loot: +10 Gold',
-          resultTryAgain: 'Try Again',
-          resultUpgrades: '⚒️ Upgrades',
-          resultQuickDesc: (name) => `${name} emerged victorious from the battlefield!`,
-          resultRemainingHp: (hp) => `Remaining Castle HP: ${hp} HP`,
-          resultPlayAgain: 'Play Again',
-          resultMainMenu: 'Main Menu',
-          // Mobile Portrait Rotate Overlay & Weather Surprises
-          rotateTitle: 'ROTATE TO LANDSCAPE',
-          rotateDesc: 'Turn your phone sideways to view both fortresses and the full siege battlefield.',
+          rotateTitle: 'ROTATE YOUR PHONE',
+          rotateDesc: 'Turn your device sideways to view both castles and the full siege battlefield.',
           rotateBtn: '⛶ Fullscreen & Landscape',
           rotateSkip: 'Continue anyway',
-          campWeatherLabel: 'Weather:',
-          windSurpriseBreeze: '🍃 VALLEY BREEZE!',
-          windSurpriseGust: '🌬️ WIND SHIFTED DIRECTION!',
-          windSurpriseSandstorm: '🌪️ SUDDEN SANDSTORM!',
-          windSurpriseCalm: '☀️ DEAD CALM (NO WIND)',
-          windSurpriseStorm: '⛈️ HOWLING TEMPEST!',
-          // Floating Canvas & Toasts
-          floatMehter: 'JANISSARY MARCH! +25% DMG',
-          floatShield: 'HOLY AEGIS ACTIVE!',
-          floatSandstorm: 'SANDSTORM UNLEASHED!',
-          floatRepair: (amt) => `+${amt} REPAIR`,
-          floatCrit: (dmg) => `CRITICAL! -${dmg}`,
-          floatLoot: (g) => `+${g} LOOT`,
-          floatBurn: (dmg) => `BURN! -${dmg}`,
-          toastInsufficientGold: (cost) => `Insufficient Gold! (${cost} Gold required)`,
-          toastCooldown: (name, cd) => `${name} recharging (${cd} turns left)`,
-          toastMehterActive: 'Janissary March is already active!',
-          toastMehterPlayed: 'Janissary March sounded! Next shot +25% stronger!',
-          toastSkillLoaded: (name) => `${name} loaded! Aim and fire.`,
-          toastRepairGold: '12 Gold required for repairs!',
-          toastCampGoldLow: 'Not enough Campaign Gold! Conquer chapters to earn more.',
-          toastUpgradeDone: (title, lvl) => `${title} upgraded to Level ${lvl}!`,
-          toastRoomReady: (code) => `Room created! Code: ${code}`,
-          toastLobbyWaiting: (code) => `Room Ready (${code})! Waiting for opponent to join...`,
-          toastOpponentJoined: (name) => `Opponent joined (${name})! Battle starting!`,
-          toastEnterRoomCode: 'Please enter the room code shared by your friend (Ex: WB482).',
-          toastJoinedRoom: 'Connected to room! Waiting for host shot...',
-          toastCodeCopied: 'Room Code copied!',
-          toastCopyManual: 'Select and copy the code manually.',
-          toastDemoStarted: 'Demo Online Arena started!',
+          resultWinTitle: 'VICTORY!',
+          resultLoseTitle: 'DEFEAT',
+          resultLocalWin: (name) => `${name} WINS!`,
+          resultUpgrades: '⚒️ Upgrades',
+          resultCampWinDesc: (chShort) => `${chShort} conquered and the Royal Banner raised above the battlements!`,
+          resultCampWinReward: (rew, tot) => `Loot: +${rew} Gold • Campaign Treasury: ${tot} Gold`,
+          resultNextChapter: 'Next Chapter ➔',
+          resultConquestMap: 'Conquest Map',
+          resultMainMenu: 'Main Menu',
+          resultCampLoseDesc: 'Our fortress has fallen! Upgrade your walls in the workshop and strike again.',
+          resultCampLoseReward: 'Consolation Loot: +25 Gold',
+          resultTryAgain: 'Try Again',
+          resultQuickDesc: (name) => `${name} shattered the enemy ramparts and claimed victory!`,
+          resultRemainingHp: (hp) => `Remaining Fortress Integrity: ${hp} HP`,
+          resultPlayAgain: 'Play Again',
+          toastLangChanged: 'Language set to English',
           toastMuted: 'Audio muted',
-          toastUnmuted: 'Audio unmuted',
-          toastOpponentLeft: 'Opponent disconnected!',
-          toastLangChanged: 'Language switched to English'
+          toastUnmuted: 'Audio enabled',
+          toastInsufficientGold: (c) => `Insufficient gold! (${c} gold needed)`,
+          toastRepairGold: '12 gold required for repair!',
+          toastCooldown: (name, cd) => `${name} is on cooldown for ${cd} turn(s)!`,
+          toastMehterActive: 'Janissary March buff is already active!',
+          toastMehterPlayed: 'Janissary March sounded! Next shot deals +25% damage!',
+          toastSkillLoaded: (name) => `${name} loaded! Aim and fire!`,
+          floatRepair: (amt) => `+${amt} REPAIR`,
+          floatMehter: 'JANISSARY MARCH (+25%)',
+          floatShield: 'HOLY AEGIS ACTIVE',
+          floatSandstorm: 'SANDSTORM!',
+          floatCrit: (dmg) => `CRIT -${dmg}!`,
+          floatLoot: (g) => `+${g} GOLD`,
+          floatBurn: (dmg) => `BURN -${dmg}`,
+          windSurpriseBreeze: '🌬️ Sudden Breeze!',
+          windSurpriseStorm: '⛈️ Gale Shifted!',
+          windSurpriseGust: '🌊 Strait Gust!',
+          windSurpriseSandstorm: '🏜️ Desert Sandstorm!',
+          windSurpriseCalm: '⛰️ Mountain Lee: Wind Calmed!'
         }
       };
 
       function t(key, ...args) {
         const dict = UI_TEXT[currentLang] || UI_TEXT.tr;
-        const val = dict[key];
-        if (typeof val === 'function') return val(...args);
-        return val !== undefined ? val : key;
+        const val = dict[key] !== undefined ? dict[key] : UI_TEXT.tr[key];
+        return typeof val === 'function' ? val(...args) : val;
+      }
+
+      const getKName = (k) => currentLang === 'en' ? (k.nameEn || k.name) : k.name;
+      const getKFullName = (k) => currentLang === 'en' ? (k.fullNameEn || k.fullName) : k.fullName;
+      const getKPassiveName = (k) => currentLang === 'en' ? (k.passiveNameEn || k.passiveName) : k.passiveName;
+      const getKPassiveDesc = (k) => currentLang === 'en' ? (k.passiveDescEn || k.passiveDesc) : k.passiveDesc;
+      const getSkillName = (sk) => currentLang === 'en' ? (sk.nameEn || sk.name) : sk.name;
+      const getSkillDesc = (sk) => currentLang === 'en' ? (sk.descEn || sk.desc) : sk.desc;
+      const getChTitle = (ch) => currentLang === 'en' ? (ch.titleEn || ch.title) : ch.title;
+      const getChShort = (ch) => currentLang === 'en' ? (ch.shortEn || ch.short) : ch.short;
+      const getChDesc = (ch) => currentLang === 'en' ? (ch.descEn || ch.desc) : ch.desc;
+      const getChLore = (ch) => currentLang === 'en' ? (ch.loreEn || ch.lore) : ch.lore;
+      const getChWeather = (ch) => currentLang === 'en' ? (ch.weatherEn || ch.weather) : ch.weather;
+      const getChTaunts = (ch) => (ch.taunts && (ch.taunts[currentLang] || ch.taunts.tr)) || [];
+
+      /* =========================================================================
+       * 1. KINGDOM DEFINITIONS (5 HISTORICAL EMPIRES)
+       * ========================================================================= */
+      const KINGDOMS = {
+        osmanli: {
+          id: 'osmanli',
+          name: 'OSMANLI',
+          nameEn: 'OTTOMAN',
+          fullName: 'Osmanlı İmparatorluğu',
+          fullNameEn: 'Ottoman Empire',
+          primaryColor: '#b91c1c',
+          secondaryColor: '#ffd97d',
+          hpMult: 1.04,
+          speedMult: 1.03,
+          windResist: 0.12,
+          stoneArmorMult: 0.92,
+          heavyDamageMult: 1.15,
+          goldBonus: 3,
+          passiveName: 'Topçu Ocağı',
+          passiveNameEn: 'Imperial Artillery Corps',
+          passiveDesc: 'Ağır topçu hasarı +%15, tur başı +3 altın',
+          passiveDescEn: '+15% heavy artillery damage, +3 gold per turn',
+          skill1: {
+            type: 'buff_mehter',
+            name: 'MEHTER MARŞI',
+            nameEn: 'JANISSARY MARCH',
+            cost: 0,
+            cooldown: 3,
+            desc: 'Bedava çalınır; bir sonraki atışın hasarını +%25 artırır.',
+            descEn: 'Free to sound; boosts your next shot damage by +25%.'
+          },
+          skill2: {
+            type: 'ammo_sahi',
+            name: 'ŞAHİ TOPU',
+            nameEn: 'BASILICA CANNON',
+            cost: 28,
+            cooldown: 3,
+            desc: 'Sv.3 Tunç Top gerektirir. Devasa sur delici gülle ateşler.',
+            descEn: 'Requires Lv.3 Cannon. Fires a massive wall-shattering bombard.'
+          }
+        },
+        bizans: {
+          id: 'bizans',
+          name: 'BİZANS',
+          nameEn: 'BYZANTINE',
+          fullName: 'Bizans İmparatorluğu',
+          fullNameEn: 'Byzantine Empire',
+          primaryColor: '#6b21a8',
+          secondaryColor: '#facc15',
+          hpMult: 1.08,
+          speedMult: 1.0,
+          windResist: 0.15,
+          stoneArmorMult: 0.85,
+          heavyDamageMult: 1.0,
+          goldBonus: 2,
+          passiveName: 'Theodosius Surları',
+          passiveNameEn: 'Theodosian Walls',
+          passiveDesc: 'Taş surlar %15 daha dayanıklıdır',
+          passiveDescEn: 'Stone walls take 15% less damage',
+          skill1: {
+            type: 'ammo_grejuva',
+            name: 'GREJUVA ATEŞİ',
+            nameEn: 'GREEK FIRE',
+            cost: 16,
+            cooldown: 2,
+            desc: 'Suda bile sönmeyen sıvı ateş; 3 tur boyunca ağır yanma hasarı verir.',
+            descEn: 'Unquenchable liquid fire; inflicts 3 turns of heavy burn damage.'
+          },
+          skill2: {
+            type: 'instant_fortify',
+            name: 'SUR TAHKİMİ',
+            nameEn: 'WALL FORTIFY',
+            cost: 16,
+            cooldown: 3,
+            desc: 'Surları acil güçlendirerek kaleye +55 HP kazandırır.',
+            descEn: 'Reinforces battlements to restore +55 Castle HP.'
+          }
+        },
+        kutsal_roma: {
+          id: 'kutsal_roma',
+          name: 'KUTSAL ROMA',
+          nameEn: 'HOLY ROMAN',
+          fullName: 'Kutsal Roma (Tapınak)',
+          fullNameEn: 'Holy Roman Empire',
+          primaryColor: '#1d4ed8',
+          secondaryColor: '#e2e8f0',
+          hpMult: 1.06,
+          speedMult: 1.01,
+          windResist: 0.18,
+          stoneArmorMult: 0.88,
+          heavyDamageMult: 1.08,
+          goldBonus: 2,
+          passiveName: 'Çelik Zırh',
+          passiveNameEn: 'Templar Plate',
+          passiveDesc: 'Kale HP +%6 ve yüksek rüzgar direnci',
+          passiveDescEn: '+6% Castle HP and high wind resistance',
+          skill1: {
+            type: 'ammo_trebuchet',
+            name: 'DEV TREBUCHET',
+            nameEn: 'GRAND TREBUCHET',
+            cost: 18,
+            cooldown: 2,
+            desc: 'Sv.2 Trebuchet gerektirir. Yüksek yay çizen dev kaya fırlatır.',
+            descEn: 'Requires Lv.2 Trebuchet. Hurls a high-arcing siege boulder.'
+          },
+          skill2: {
+            type: 'instant_shield',
+            name: 'KUTSAL KALKAN',
+            nameEn: 'HOLY AEGIS',
+            cost: 18,
+            cooldown: 3,
+            desc: 'Rakibin bir sonraki turda vereceği hasarı %45 azaltır.',
+            descEn: 'Reduces incoming enemy damage by 45% on the next turn.'
+          }
+        },
+        memluk: {
+          id: 'memluk',
+          name: 'MEMLÜK',
+          nameEn: 'MAMLUK',
+          fullName: 'Memlük Sultanlığı',
+          fullNameEn: 'Mamluk Sultanate',
+          primaryColor: '#d97706',
+          secondaryColor: '#fef08a',
+          hpMult: 1.0,
+          speedMult: 1.04,
+          windResist: 0.25,
+          stoneArmorMult: 0.94,
+          heavyDamageMult: 1.05,
+          goldBonus: 4,
+          passiveName: 'Çöl Rüzgarı Ustası',
+          passiveNameEn: 'Desert Wind Master',
+          passiveDesc: 'Rüzgar sapması %25 azalır, tur başı +4 altın',
+          passiveDescEn: '25% less wind drift, +4 gold per turn',
+          skill1: {
+            type: 'ammo_neft',
+            name: 'NEFT YAĞMURU',
+            nameEn: 'NAPHTHA RAIN',
+            cost: 18,
+            cooldown: 2,
+            desc: '5 yanıcı neft küresiyle geniş alanı ateşe verir.',
+            descEn: 'Blankets a wide area with 5 blazing naphtha spheres.'
+          },
+          skill2: {
+            type: 'instant_sandstorm',
+            name: 'KUM FIRTINASI',
+            nameEn: 'SANDSTORM',
+            cost: 14,
+            cooldown: 3,
+            desc: 'Rakibin aleyhine şiddetli rüzgar fırtınası koparır.',
+            descEn: 'Unleashes a fierce headwind storm against your rival.'
+          }
+        },
+        mogol: {
+          id: 'mogol',
+          name: 'MOĞOL',
+          nameEn: 'MONGOL',
+          fullName: 'Moğol İmparatorluğu',
+          fullNameEn: 'Mongol Empire',
+          primaryColor: '#0369a1',
+          secondaryColor: '#fde047',
+          hpMult: 0.96,
+          speedMult: 1.07,
+          windResist: 0.20,
+          stoneArmorMult: 0.96,
+          heavyDamageMult: 1.12,
+          goldBonus: 4,
+          passiveName: 'Bozkır Akıncıları',
+          passiveNameEn: 'Steppe Raiders',
+          passiveDesc: 'Atış hızı +%7, ganimet ve tur geliri yüksek',
+          passiveDescEn: '+7% projectile velocity and higher raid gold',
+          skill1: {
+            type: 'ammo_arrows',
+            name: 'ATEŞLİ OK BARAJI',
+            nameEn: 'FIRE ARROW VOLLEY',
+            cost: 16,
+            cooldown: 2,
+            desc: '7 yanan ok yağmuruyla düşman surlarını tutuşturur.',
+            descEn: 'Rains 7 flaming arrows to ignite enemy ramparts.'
+          },
+          skill2: {
+            type: 'ammo_barrel',
+            name: 'BARUT FIÇISI',
+            nameEn: 'POWDER KEG',
+            cost: 20,
+            cooldown: 3,
+            desc: 'Sv.3 Tunç Top gerektirir. Geniş yarıçaplı barut patlaması yaratır.',
+            descEn: 'Requires Lv.3 Cannon. Triggers a massive gunpowder blast.'
+          }
+        }
+      };
+
+      const KINGDOM_LIST = Object.values(KINGDOMS);
+
+      /* =========================================================================
+       * 2. 6-CHAPTER CONQUEST CAMPAIGN DATA
+       * ========================================================================= */
+      const CHAPTERS = [
+        {
+          id: 1,
+          short: 'Sınır Karakolu',
+          shortEn: 'Border Outpost',
+          title: 'BÖLÜM 1 • SINIR KARAKOLU',
+          titleEn: 'CHAPTER 1 • BORDER OUTPOST',
+          desc: 'Vadideki ileri sınır karakolunu düşürerek fetih yürüyüşünü başlat.',
+          descEn: 'Capture the forward valley outpost to launch your conquest.',
+          lore: 'Sabah sisi vadiden çekilirken sınır kulesinin çanları çalmaya başladı. İlk suru aşan ordu imparatorluk yolunu açacak.',
+          loreEn: 'As morning mist lifts from the valley, watchtower bells ring out. Breaching this outpost opens the imperial road.',
+          weather: 'Hafif Meltem',
+          weatherEn: 'Light Breeze',
+          enemyKingdom: 'bizans',
+          aiDiff: 'easy',
+          windMode: 'calm',
+          windSurprise: 'breeze',
+          skyTheme: 'day',
+          rewardGold: 75,
+          castleLayout: 'outpost',
+          mapPos: { x: 11, y: 76 },
+          taunts: {
+            tr: [
+              { speaker: 'player', text: 'Sınır komutanı! Sancaklarımız ufukta göründü, kapıları açın!' },
+              { speaker: 'enemy', text: 'Bu karakol yüz yıldır düşmedi! Taşlarımız surlarınızı ezecek!' },
+              { speaker: 'player', text: 'Öyleyse mancınıklarımız konuşsun. Ateş serbest!' }
+            ],
+            en: [
+              { speaker: 'player', text: 'Outpost commander! Our banners crown the ridge—open your gates!' },
+              { speaker: 'enemy', text: 'This watchtower has stood for a century! Our stones will crush you!' },
+              { speaker: 'player', text: 'Then let our siege engines speak. Fire at will!' }
+            ]
+          }
+        },
+        {
+          id: 2,
+          short: 'Boğaz Hisarı',
+          shortEn: 'Strait Fortress',
+          title: 'BÖLÜM 2 • BOĞAZ HİSARI',
+          titleEn: 'CHAPTER 2 • STRAIT FORTRESS',
+          desc: 'Deniz geçidini tutan ikiz burçlu hisarı boğaz rüzgarlarına rağmen aş.',
+          descEn: 'Storm the twin-towered strait citadel against shifting sea gusts.',
+          lore: 'Boğazın serin rüzgarları top güllelerinin yönünü saptırıyor. Rüzgar ibresini kollayan komutan zaferi kazanacak.',
+          loreEn: 'Shifting strait gusts bend every shot mid-air. Only a commander who masters the wind will prevail.',
+          weather: 'Değişken Boğaz Rüzgarı',
+          weatherEn: 'Shifting Strait Gusts',
+          enemyKingdom: 'kutsal_roma',
+          aiDiff: 'easy',
+          windMode: 'normal',
+          windSurprise: 'strait_shift',
+          skyTheme: 'dusk',
+          rewardGold: 105,
+          castleLayout: 'strait',
+          mapPos: { x: 31, y: 33 },
+          taunts: {
+            tr: [
+              { speaker: 'enemy', text: 'Boğazın rüzgarı bile bizden yana! Gülleleriniz denize gömülecek!' },
+              { speaker: 'player', text: 'Rüzgarı da hesaplarız, surlarını da yerle bir ederiz!' }
+            ],
+            en: [
+              { speaker: 'enemy', text: 'Even the strait winds favor us! Your shots will sink into the sea!' },
+              { speaker: 'player', text: 'We account for the wind—and we will level your ramparts!' }
+            ]
+          }
+        },
+        {
+          id: 3,
+          short: 'Vaha Kalesi',
+          shortEn: 'Oasis Citadel',
+          title: 'BÖLÜM 3 • VAHA KALESİ',
+          titleEn: 'CHAPTER 3 • OASIS CITADEL',
+          desc: 'Kızgın çöl güneşinin altında Memlük vaha hisarını kuşat.',
+          descEn: 'Besiege the Mamluk desert oasis citadel beneath the scorching sun.',
+          lore: 'Çöl kumları yükselirken neft kazanları surların üzerinde kaynıyor. Kum fırtınası her an patlak verebilir.',
+          loreEn: 'Desert sands swirl as naphtha cauldrons boil atop the battlements. A sandstorm could strike any moment.',
+          weather: 'Çöl Kum Fırtınası',
+          weatherEn: 'Desert Sandstorm',
+          enemyKingdom: 'memluk',
+          aiDiff: 'normal',
+          windMode: 'normal',
+          windSurprise: 'sandstorm',
+          skyTheme: 'desert',
+          rewardGold: 140,
+          castleLayout: 'desert',
+          mapPos: { x: 52, y: 72 },
+          taunts: {
+            tr: [
+              { speaker: 'enemy', text: 'Çölün ateşi ve kum fırtınası ordunuzu yutacak!' },
+              { speaker: 'player', text: 'Ne fırtına ne kızgın kumlar yürüyüşümüzü durdurabilir!' }
+            ],
+            en: [
+              { speaker: 'enemy', text: 'The desert heat and sandstorms will swallow your host!' },
+              { speaker: 'player', text: 'Neither storm nor scorching sand can halt our march!' }
+            ]
+          }
+        },
+        {
+          id: 4,
+          short: 'Demir Geçit',
+          shortEn: 'Iron Pass Bastion',
+          title: 'BÖLÜM 4 • DEMİR GEÇİT',
+          titleEn: 'CHAPTER 4 • IRON PASS BASTION',
+          desc: 'Dağ geçidindeki çift katlı kesme taş tabyayı ağır toplarla yar.',
+          descEn: 'Breach the double-walled mountain pass bastion with heavy artillery.',
+          lore: 'Sarp kayalıkların arasına kurulu Demir Geçit, kalın taş bloklarıyla sıradan taş atışlarına geçit vermiyor.',
+          loreEn: 'Wedged between sheer cliffs, Iron Pass boasts thick cut-stone blocks that shrug off light projectiles.',
+          weather: 'Dağ Girdabı',
+          weatherEn: 'Mountain Eddy',
+          enemyKingdom: 'kutsal_roma',
+          aiDiff: 'normal',
+          windMode: 'normal',
+          windSurprise: 'mountain_eddy',
+          skyTheme: 'overcast',
+          rewardGold: 180,
+          castleLayout: 'bastion',
+          mapPos: { x: 72, y: 30 },
+          taunts: {
+            tr: [
+              { speaker: 'enemy', text: 'Kesme taş surlarımızı basit mancınıklarla aşamazsınız!' },
+              { speaker: 'player', text: 'Atölyemizden çıkan ağır toplar taşınızı toza çevirecek!' }
+            ],
+            en: [
+              { speaker: 'enemy', text: 'Your simple catapults cannot scratch our cut-stone bastions!' },
+              { speaker: 'player', text: 'Our upgraded siege cannons will grind your stone to dust!' }
+            ]
+          }
+        },
+        {
+          id: 5,
+          short: 'Bozkır Ordugahı',
+          shortEn: 'Steppe Ordu Fortress',
+          title: 'BÖLÜM 5 • BOZKIR ORDUGAHI',
+          titleEn: 'CHAPTER 5 • STEPPE ORDU FORTRESS',
+          desc: 'Fırtınalı bozkırda Moğol Büyük Han tahkimatını sustur.',
+          descEn: 'Silence the Mongol Great Khan fortification across the stormy steppe.',
+          lore: 'Kızıl gökyüzü altında fırtına dinmiyor. Moğol okçuları ve barut fıçıları amansız bir düello vadediyor.',
+          loreEn: 'Under a crimson sky, the gale rages without mercy. Mongol fire arrows and powder kegs await.',
+          weather: 'Şiddetli Bozkır Fırtınası',
+          weatherEn: 'Fierce Steppe Gale',
+          enemyKingdom: 'mogol',
+          aiDiff: 'hard',
+          windMode: 'storm',
+          windSurprise: null,
+          skyTheme: 'crimson',
+          rewardGold: 230,
+          castleLayout: 'steppe',
+          mapPos: { x: 82, y: 68 },
+          taunts: {
+            tr: [
+              { speaker: 'enemy', text: 'Bozkırın fırtınası bizimle eser! Ok yağmurumuz göğü karartacak!' },
+              { speaker: 'player', text: 'Fırtınaya karşı şahi toplarımızı kurduk—geri adım yok!' }
+            ],
+            en: [
+              { speaker: 'enemy', text: 'The steppe gale rides with us! Our arrows will blot out the sky!' },
+              { speaker: 'player', text: 'Our bombards stand ready against the storm—no retreat!' }
+            ]
+          }
+        },
+        {
+          id: 6,
+          short: 'İmparatorluk Kalesi',
+          shortEn: 'Imperial Citadel',
+          title: 'BÖLÜM 6 • İMPARATORLUK KALESİ',
+          titleEn: 'CHAPTER 6 • IMPERIAL CITADEL',
+          desc: 'Nihai kuşatma! Başkentin devasa surlarını yık ve zaferi ilan et.',
+          descEn: 'The final siege! Shatter the capital’s grand ramparts and claim victory.',
+          lore: 'Bütün krallıkların gözü bu son kuşatmada. Başkent surları düştüğünde tarih yeniden yazılacak.',
+          loreEn: 'All realms watch this final siege. When the capital’s walls fall, history will be rewritten.',
+          weather: 'Kıyamet Rüzgarları',
+          weatherEn: 'Imperial Tempest',
+          enemyKingdom: 'bizans',
+          aiDiff: 'hard',
+          windMode: 'storm',
+          windSurprise: null,
+          skyTheme: 'imperial',
+          rewardGold: 320,
+          castleLayout: 'imperial',
+          mapPos: { x: 91, y: 42 },
+          taunts: {
+            tr: [
+              { speaker: 'enemy', text: 'Burası imparatorluğun kalbi! Son taşımıza kadar savunacağız!' },
+              { speaker: 'player', text: 'Bugün surlar yıkılacak ve sancağımız en yüksek burçta dalgalanacak!' }
+            ],
+            en: [
+              { speaker: 'enemy', text: 'This is the heart of the Empire! We defend to the last stone!' },
+              { speaker: 'player', text: 'Today these walls fall, and our banner rises upon the highest keep!' }
+            ]
+          }
+        }
+      ];
+
+      /* =========================================================================
+       * 3. ROYAL CREST & COMMANDER SVG AVATARS + SEEDED RNG
+       * ========================================================================= */
+      function getKingdomPortraitSVG(id) {
+        const k = KINGDOMS[id] || KINGDOMS.osmanli;
+        const emblems = {
+          osmanli: `<circle cx="32" cy="30" r="11" fill="none" stroke="#ffd97d" stroke-width="3"/><circle cx="35" cy="28" r="8.5" fill="${k.primaryColor}"/><polygon points="41,28 43,31 46,31 43.5,33 44.5,36 41,34 37.5,36 38.5,33 36,31 39,31" fill="#ffd97d"/>`,
+          bizans: `<path d="M22 20 L32 14 L42 20 L40 42 L32 48 L24 42 Z" fill="none" stroke="#facc15" stroke-width="2.6"/><path d="M32 17 V45 M24 28 H40" stroke="#facc15" stroke-width="3"/>`,
+          kutsal_roma: `<path d="M21 18 H43 V34 C43 42 32 48 32 48 C32 48 21 42 21 34 Z" fill="none" stroke="#e2e8f0" stroke-width="2.6"/><path d="M32 21 V43 M24 31 H40" stroke="#ffd97d" stroke-width="3.2"/>`,
+          memluk: `<polygon points="32,14 37,25 49,25 39,33 43,45 32,37 21,45 25,33 15,25 27,25" fill="none" stroke="#fef08a" stroke-width="2.4"/><circle cx="32" cy="30" r="5" fill="#fef08a"/>`,
+          mogol: `<path d="M32 14 L44 30 L32 46 L20 30 Z" fill="none" stroke="#fde047" stroke-width="2.6"/><circle cx="32" cy="30" r="6" fill="#fde047"/>`
+        };
+        return `<svg viewBox="0 0 64 64" class="w-full h-full block">
+          <defs>
+            <linearGradient id="g_${id}" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="${k.primaryColor}"/>
+              <stop offset="1" stop-color="#120f26"/>
+            </linearGradient>
+          </defs>
+          <rect width="64" height="64" fill="url(#g_${id})"/>
+          <rect x="3" y="3" width="58" height="58" rx="9" fill="none" stroke="${k.secondaryColor}" stroke-width="2" opacity="0.85"/>
+          ${emblems[id] || emblems.osmanli}
+        </svg>`;
+      }
+
+      function createSeededRandom(seed) {
+        let s = (seed >>> 0) || 123456789;
+        return function () {
+          s = (s * 1664525 + 1013904223) >>> 0;
+          return s / 4294967296;
+        };
       }
 
       /* =========================================================================
-       * 1. WEB AUDIO SYNTHESIZER & MOBILE PCM WAV FALLBACK ENGINE
+       * 4. MOBILE & DESKTOP PROCEDURAL SOUND ENGINE (WEB AUDIO + PCM WAV FALLBACK)
        * ========================================================================= */
-      class SoundFX {
+      class SiegeSoundEngine {
         constructor() {
           this.ctx = null;
           this.muted = false;
           this.unlocked = false;
-          this.wavClips = {};
-          this._buildWavFallbacks();
+          this.wavCache = {};
+          this.silentEl = null;
         }
 
-        // Synthesizes 100% procedural PCM WAV Blobs in memory for iOS/Android local HTML fallback
-        _createWavBlobUrl(durationSec, sampleFn) {
-          const sampleRate = 22050;
+        bindGlobalUnlock() {
+          const handler = () => this.unlock();
+          ['touchstart', 'touchend', 'pointerdown', 'mousedown', 'keydown'].forEach(evt => {
+            window.addEventListener(evt, handler, { passive: true });
+          });
+        }
+
+        unlock() {
+          if (this.muted) return;
+          try {
+            const AudioCtx = window.AudioContext || window.webkitAudioContext;
+            if (AudioCtx) {
+              if (!this.ctx) this.ctx = new AudioCtx();
+              if (this.ctx.state === 'suspended') {
+                this.ctx.resume().catch(() => {});
+              }
+              const buf = this.ctx.createBuffer(1, 1, 22050);
+              const src = this.ctx.createBufferSource();
+              src.buffer = buf;
+              src.connect(this.ctx.destination);
+              src.start(0);
+            }
+          } catch (e) {}
+
+          if (!this.unlocked) {
+            this.unlocked = true;
+            this._primeSilentHtmlAudio();
+          }
+        }
+
+        _primeSilentHtmlAudio() {
+          try {
+            if (!this.silentEl) {
+              this.silentEl = new Audio(this._buildWavDataUri(0.05, () => 0));
+              this.silentEl.setAttribute('playsinline', '');
+            }
+            this.silentEl.play().catch(() => {});
+          } catch (e) {}
+        }
+
+        toggleMute() {
+          this.muted = !this.muted;
+          if (!this.muted) this.unlock();
+          return this.muted;
+        }
+
+        _buildWavDataUri(durationSec, sampleFn) {
+          const sampleRate = 16000;
           const numSamples = Math.max(1, Math.floor(sampleRate * durationSec));
           const dataSize = numSamples * 2;
           const buffer = new ArrayBuffer(44 + dataSize);
           const view = new DataView(buffer);
 
-          const writeStr = (offset, str) => {
-            for (let i = 0; i < str.length; i++) {
-              view.setUint8(offset + i, str.charCodeAt(i));
-            }
+          const writeStr = (off, str) => {
+            for (let i = 0; i < str.length; i++) view.setUint8(off + i, str.charCodeAt(i));
           };
-
           writeStr(0, 'RIFF');
           view.setUint32(4, 36 + dataSize, true);
           writeStr(8, 'WAVE');
           writeStr(12, 'fmt ');
           view.setUint32(16, 16, true);
-          view.setUint16(20, 1, true); // PCM
-          view.setUint16(22, 1, true); // Mono
+          view.setUint16(20, 1, true);
+          view.setUint16(22, 1, true);
           view.setUint32(24, sampleRate, true);
           view.setUint32(28, sampleRate * 2, true);
           view.setUint16(32, 2, true);
@@ -1517,745 +1972,169 @@
           view.setUint32(40, dataSize, true);
 
           for (let i = 0; i < numSamples; i++) {
-            const t = i / sampleRate;
-            const sample = Math.max(-1, Math.min(1, sampleFn(t, durationSec)));
-            view.setInt16(44 + i * 2, sample * 32767, true);
+            const tSec = i / sampleRate;
+            const val = Math.max(-1, Math.min(1, sampleFn(tSec, durationSec)));
+            view.setInt16(44 + i * 2, val * 32767, true);
           }
 
-          return URL.createObjectURL(new Blob([buffer], { type: 'audio/wav' }));
+          let binary = '';
+          const bytes = new Uint8Array(buffer);
+          for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+          return 'data:audio/wav;base64,' + btoa(binary);
         }
 
-        _buildWavFallbacks() {
+        _playWavFallback(key, durationSec, sampleFn) {
           try {
-            this.wavClips.silent = this._createWavBlobUrl(0.04, () => 0);
-
-            this.wavClips.launch = this._createWavBlobUrl(0.24, (t, d) => {
-              const env = Math.exp(-t * 14);
-              const freq = 210 * Math.pow(42 / 210, t / d);
-              return Math.sin(2 * Math.PI * freq * t) * env * 0.45;
-            });
-
-            this.wavClips.heavyLaunch = this._createWavBlobUrl(0.36, (t, d) => {
-              const env = Math.exp(-t * 9);
-              const freq = 140 * Math.pow(38 / 140, t / d);
-              const saw = 2 * ((freq * t) % 1) - 1;
-              return saw * env * 0.45;
-            });
-
-            this.wavClips.impact = this._createWavBlobUrl(0.22, (t) => {
-              const env = Math.exp(-t * 20);
-              const rumble = Math.sin(2 * Math.PI * 110 * t) * 0.5;
-              const grit = (Math.random() * 2 - 1) * 0.5;
-              return (rumble + grit) * env * 0.55;
-            });
-
-            this.wavClips.explosion = this._createWavBlobUrl(0.46, (t, d) => {
-              const env = Math.exp(-t * 7.5);
-              const freq = 95 * Math.pow(24 / 95, t / d);
-              const low = Math.sin(2 * Math.PI * freq * t) * 0.65;
-              const noise = (Math.random() * 2 - 1) * 0.45;
-              return (low + noise) * env * 0.65;
-            });
-
-            const buildNotesWav = (notes) => this._createWavBlobUrl(notes.length * 0.09 + 0.24, (t) => {
-              let out = 0;
-              notes.forEach((freq, idx) => {
-                const localT = t - idx * 0.09;
-                if (localT >= 0 && localT <= 0.25) {
-                  const env = Math.exp(-localT * 12);
-                  out += Math.sin(2 * Math.PI * freq * localT) * env * 0.35;
-                }
-              });
-              return out;
-            });
-
-            this.wavClips.mehter = buildNotesWav([293.66, 369.99, 440, 587.33]);
-            this.wavClips.repair = buildNotesWav([330, 440, 554.37]);
-            this.wavClips.victory = buildNotesWav([392, 493.88, 587.33, 783.99]);
-          } catch (e) {}
-        }
-
-        _playWavFallback(clipName, volume = 0.85) {
-          if (this.muted) return;
-          const url = this.wavClips[clipName];
-          if (!url) return;
-          try {
-            const audio = new Audio(url);
-            audio.volume = Math.max(0, Math.min(1, volume));
-            const p = audio.play();
-            if (p && typeof p.catch === 'function') p.catch(() => {});
-          } catch (e) {}
-        }
-
-        bindGlobalUnlock() {
-          const events = ['touchstart', 'touchend', 'pointerdown', 'mousedown', 'keydown'];
-          const onFirstGesture = () => {
-            this.unlock();
-            if (this.ctx && this.ctx.state === 'running' && this.unlocked) {
-              events.forEach(ev => window.removeEventListener(ev, onFirstGesture, true));
+            if (!this.wavCache[key]) {
+              this.wavCache[key] = this._buildWavDataUri(durationSec, sampleFn);
             }
-          };
-          events.forEach(ev => window.addEventListener(ev, onFirstGesture, { capture: true, passive: true }));
-        }
-
-        unlock() {
-          try {
-            if (!this.ctx) {
-              const AudioCtx = window.AudioContext || window.webkitAudioContext;
-              if (AudioCtx) this.ctx = new AudioCtx();
-            }
-            if (this.ctx) {
-              if (this.ctx.state !== 'running') {
-                this.ctx.resume().catch(() => {});
-              }
-              if (!this.unlocked) {
-                // Hardware-unlock Web Audio buffer on iOS/Android first touch
-                const silentBuf = this.ctx.createBuffer(1, 1, 22050);
-                const src = this.ctx.createBufferSource();
-                src.buffer = silentBuf;
-                src.connect(this.ctx.destination);
-                src.start(0);
-
-                // Prime HTML5 <audio> channel so iOS plays even if side Silent Switch is on
-                if (this.wavClips.silent) {
-                  const a = new Audio(this.wavClips.silent);
-                  a.volume = 0.01;
-                  const p = a.play();
-                  if (p && typeof p.catch === 'function') p.catch(() => {});
-                }
-                this.unlocked = true;
-              }
-            }
+            const audio = new Audio(this.wavCache[key]);
+            audio.setAttribute('playsinline', '');
+            audio.volume = 0.72;
+            audio.play().catch(() => {});
           } catch (e) {}
-        }
-
-        toggleMute() {
-          this.muted = !this.muted;
-          if (!this.muted) {
-            this.unlock();
-            this._playWavFallback('repair', 0.4);
-          }
-          return this.muted;
         }
 
         playLaunch(isHeavy = false) {
           if (this.muted) return;
           this.unlock();
-          if (!this.ctx || this.ctx.state !== 'running') {
-            this._playWavFallback(isHeavy ? 'heavyLaunch' : 'launch', 0.85);
-            return;
+          if (this.ctx && this.ctx.state === 'running') {
+            try {
+              const now = this.ctx.currentTime;
+              const osc = this.ctx.createOscillator();
+              const gain = this.ctx.createGain();
+              osc.type = isHeavy ? 'sawtooth' : 'triangle';
+              osc.frequency.setValueAtTime(isHeavy ? 150 : 240, now);
+              osc.frequency.exponentialRampToValueAtTime(isHeavy ? 42 : 78, now + (isHeavy ? 0.28 : 0.18));
+              gain.gain.setValueAtTime(isHeavy ? 0.28 : 0.18, now);
+              gain.gain.exponentialRampToValueAtTime(0.001, now + (isHeavy ? 0.3 : 0.2));
+              osc.connect(gain);
+              gain.connect(this.ctx.destination);
+              osc.start(now);
+              osc.stop(now + (isHeavy ? 0.31 : 0.21));
+              return;
+            } catch (e) {}
           }
-
-          const now = this.ctx.currentTime + 0.005;
-          const osc = this.ctx.createOscillator();
-          const gain = this.ctx.createGain();
-          osc.type = isHeavy ? 'sawtooth' : 'triangle';
-          osc.frequency.setValueAtTime(isHeavy ? 140 : 210, now);
-          osc.frequency.exponentialRampToValueAtTime(42, now + (isHeavy ? 0.35 : 0.2));
-
-          gain.gain.setValueAtTime(isHeavy ? 0.28 : 0.18, now);
-          gain.gain.exponentialRampToValueAtTime(0.001, now + (isHeavy ? 0.36 : 0.22));
-
-          osc.connect(gain);
-          gain.connect(this.ctx.destination);
-          osc.start(now);
-          osc.stop(now + (isHeavy ? 0.37 : 0.23));
-        }
-
-        playImpact(material = 'brick', isCritical = false) {
-          if (this.muted) return;
-          this.unlock();
-          if (!this.ctx || this.ctx.state !== 'running') {
-            this._playWavFallback('impact', isCritical ? 0.95 : 0.75);
-            return;
-          }
-
-          const now = this.ctx.currentTime + 0.005;
-          const bufferSize = Math.floor(this.ctx.sampleRate * 0.22);
-          const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
-          const data = buffer.getChannelData(0);
-          for (let i = 0; i < bufferSize; i++) {
-            data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (this.ctx.sampleRate * 0.05));
-          }
-
-          const noise = this.ctx.createBufferSource();
-          noise.buffer = buffer;
-
-          const filter = this.ctx.createBiquadFilter();
-          filter.type = 'lowpass';
-          filter.frequency.setValueAtTime(material === 'stone' ? 520 : material === 'wood' ? 950 : 720, now);
-
-          const gain = this.ctx.createGain();
-          gain.gain.setValueAtTime(isCritical ? 0.36 : 0.22, now);
-          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
-
-          noise.connect(filter);
-          filter.connect(gain);
-          gain.connect(this.ctx.destination);
-          noise.start(now);
-
-          if (isCritical) {
-            const bell = this.ctx.createOscillator();
-            const bGain = this.ctx.createGain();
-            bell.type = 'sine';
-            bell.frequency.setValueAtTime(580, now);
-            bell.frequency.exponentialRampToValueAtTime(880, now + 0.18);
-            bGain.gain.setValueAtTime(0.14, now);
-            bGain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
-            bell.connect(bGain);
-            bGain.connect(this.ctx.destination);
-            bell.start(now);
-            bell.stop(now + 0.21);
-          }
+          this._playWavFallback(isHeavy ? 'launch_h' : 'launch_l', 0.22, (t, d) => {
+            const env = 1 - t / d;
+            const freq = (isHeavy ? 145 : 220) * Math.pow(0.32, t / d);
+            return Math.sin(2 * Math.PI * freq * t) * env * 0.45;
+          });
         }
 
         playExplosion() {
           if (this.muted) return;
           this.unlock();
-          if (!this.ctx || this.ctx.state !== 'running') {
-            this._playWavFallback('explosion', 0.95);
-            return;
-          }
+          if (this.ctx && this.ctx.state === 'running') {
+            try {
+              const now = this.ctx.currentTime;
+              const dur = 0.42;
+              const bufSize = Math.floor(this.ctx.sampleRate * dur);
+              const buf = this.ctx.createBuffer(1, bufSize, this.ctx.sampleRate);
+              const data = buf.getChannelData(0);
+              for (let i = 0; i < bufSize; i++) {
+                data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / bufSize, 1.8);
+              }
+              const noise = this.ctx.createBufferSource();
+              noise.buffer = buf;
 
-          const now = this.ctx.currentTime + 0.005;
-          const osc = this.ctx.createOscillator();
-          const gain = this.ctx.createGain();
-          osc.type = 'sawtooth';
-          osc.frequency.setValueAtTime(95, now);
-          osc.frequency.exponentialRampToValueAtTime(24, now + 0.45);
-          gain.gain.setValueAtTime(0.32, now);
-          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.46);
-          osc.connect(gain);
-          gain.connect(this.ctx.destination);
-          osc.start(now);
-          osc.stop(now + 0.48);
+              const filter = this.ctx.createBiquadFilter();
+              filter.type = 'lowpass';
+              filter.frequency.setValueAtTime(420, now);
+              filter.frequency.exponentialRampToValueAtTime(75, now + dur);
+
+              const gain = this.ctx.createGain();
+              gain.gain.setValueAtTime(0.35, now);
+              gain.gain.exponentialRampToValueAtTime(0.001, now + dur);
+
+              noise.connect(filter);
+              filter.connect(gain);
+              gain.connect(this.ctx.destination);
+              noise.start(now);
+              return;
+            } catch (e) {}
+          }
+          this._playWavFallback('explosion', 0.38, (t, d) => {
+            const env = Math.pow(1 - t / d, 1.7);
+            const rumble = Math.sin(2 * Math.PI * 68 * t);
+            const grit = (Math.sin(t * 9876.5) * 0.5 + Math.cos(t * 5432.1) * 0.5);
+            return (rumble * 0.55 + grit * 0.45) * env * 0.65;
+          });
         }
 
-        playFanfare(type = 'mehter') {
+        playImpact(mat = 'stone', isCrit = false) {
           if (this.muted) return;
           this.unlock();
-          if (!this.ctx || this.ctx.state !== 'running') {
-            this._playWavFallback(type === 'victory' ? 'victory' : type === 'repair' ? 'repair' : 'mehter', 0.85);
-            return;
+          if (this.ctx && this.ctx.state === 'running') {
+            try {
+              const now = this.ctx.currentTime;
+              const osc = this.ctx.createOscillator();
+              const gain = this.ctx.createGain();
+              osc.type = isCrit ? 'square' : 'triangle';
+              const startFreq = isCrit ? 320 : mat === 'brick' ? 180 : 140;
+              osc.frequency.setValueAtTime(startFreq, now);
+              osc.frequency.exponentialRampToValueAtTime(48, now + 0.16);
+              gain.gain.setValueAtTime(isCrit ? 0.24 : 0.16, now);
+              gain.gain.exponentialRampToValueAtTime(0.001, now + 0.17);
+              osc.connect(gain);
+              gain.connect(this.ctx.destination);
+              osc.start(now);
+              osc.stop(now + 0.18);
+              return;
+            } catch (e) {}
           }
+          this._playWavFallback(isCrit ? 'impact_crit' : 'impact_std', 0.16, (t, d) => {
+            const env = 1 - t / d;
+            const f = (isCrit ? 290 : 155) * Math.pow(0.3, t / d);
+            return Math.sin(2 * Math.PI * f * t) * env * 0.45;
+          });
+        }
 
-          const now = this.ctx.currentTime + 0.005;
-          const notes = type === 'victory' ? [392, 493.88, 587.33, 783.99] :
-                        type === 'repair'  ? [330, 440, 554.37] :
-                                             [293.66, 369.99, 440, 587.33];
-          notes.forEach((freq, idx) => {
-            const osc = this.ctx.createOscillator();
-            const gain = this.ctx.createGain();
-            osc.type = 'triangle';
-            osc.frequency.setValueAtTime(freq, now + idx * 0.09);
-            gain.gain.setValueAtTime(0.14, now + idx * 0.09);
-            gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.09 + 0.25);
-            osc.connect(gain);
-            gain.connect(this.ctx.destination);
-            osc.start(now + idx * 0.09);
-            osc.stop(now + idx * 0.09 + 0.26);
+        playFanfare(type = 'victory') {
+          if (this.muted) return;
+          this.unlock();
+          const notes = type === 'victory'
+            ? [392, 493.88, 587.33, 783.99]
+            : type === 'mehter'
+            ? [293.66, 349.23, 440, 587.33]
+            : [329.63, 392, 523.25];
+
+          if (this.ctx && this.ctx.state === 'running') {
+            try {
+              const now = this.ctx.currentTime;
+              notes.forEach((freq, idx) => {
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(freq, now + idx * 0.11);
+                gain.gain.setValueAtTime(0.16, now + idx * 0.11);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.11 + 0.28);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now + idx * 0.11);
+                osc.stop(now + idx * 0.11 + 0.3);
+              });
+              return;
+            } catch (e) {}
+          }
+          this._playWavFallback(`fanfare_${type}`, notes.length * 0.12 + 0.15, (t, d) => {
+            const step = Math.min(notes.length - 1, Math.floor(t / 0.12));
+            const localT = t - step * 0.12;
+            const env = Math.max(0, 1 - localT / 0.24);
+            return Math.sin(2 * Math.PI * notes[step] * t) * env * 0.35;
           });
         }
       }
 
-      const sound = new SoundFX();
+      const sound = new SiegeSoundEngine();
 
       /* =========================================================================
-       * 2. 5 PLAYABLE KINGDOMS & TACTICAL ABILITIES DATA (BILINGUAL)
+       * 5. SAVE / PROGRESS PERSISTENCE
        * ========================================================================= */
-      const KINGDOMS = {
-        osmanli: {
-          id: 'osmanli',
-          name: { tr: 'OSMANLI', en: 'OTTOMAN' },
-          fullName: { tr: 'Osmanlı İmparatorluğu', en: 'Ottoman Empire' },
-          primaryColor: '#c81e1e',
-          secondaryColor: '#f59e0b',
-          passiveName: { tr: 'Topçu Ocağı', en: 'Imperial Artillery' },
-          passiveDesc: {
-            tr: 'Ağır top ve Şahi atışları +%12 yıkım gücü verir.',
-            en: 'Heavy cannon and Basilica shots deal +12% structural damage.'
-          },
-          hpMult: 1.0,
-          stoneArmorMult: 1.0,
-          heavyDamageMult: 1.12,
-          goldBonus: 0,
-          windResist: 0,
-          speedMult: 1.0,
-          skill1: {
-            id: 'mehter',
-            name: { tr: 'MEHTER MARŞI', en: 'JANISSARY MARCH' },
-            cost: 0,
-            cooldown: 3,
-            type: 'buff_mehter',
-            desc: {
-              tr: 'Bedava moral patlaması! Sonraki atışın +%25 hasar verir.',
-              en: 'Free morale surge! Your next shot deals +25% bonus damage.'
-            }
-          },
-          skill2: {
-            id: 'sahi_topu',
-            name: { tr: 'ŞAHİ TOPU', en: 'BASILICA CANNON' },
-            cost: 28,
-            cooldown: 2,
-            type: 'ammo_sahi',
-            desc: {
-              tr: '28 altın • Kesme taş surları delen zırh delici top güllesi (Sv. 3 Tunç Top gerektirir).',
-              en: '28 gold • Armor-piercing great bombard shell (Requires Lv. 3 Bronze Cannon).'
-            }
-          }
-        },
-        bizans: {
-          id: 'bizans',
-          name: { tr: 'BİZANS', en: 'BYZANTINE' },
-          fullName: { tr: 'Bizans İmparatorluğu', en: 'Byzantine Empire' },
-          primaryColor: '#6d28d9',
-          secondaryColor: '#eab308',
-          passiveName: { tr: 'Theodosius Surları', en: 'Theodosian Walls' },
-          passiveDesc: {
-            tr: 'Kesme taş kuleler gelen hasara %18 daha dayanıklıdır.',
-            en: 'Cut-stone towers take 18% less damage from incoming hits.'
-          },
-          hpMult: 1.08,
-          stoneArmorMult: 0.82,
-          heavyDamageMult: 1.0,
-          goldBonus: 0,
-          windResist: 0,
-          speedMult: 1.0,
-          skill1: {
-            id: 'grejuva',
-            name: { tr: 'GREJUVA ATEŞİ', en: 'GREEK FIRE' },
-            cost: 16,
-            cooldown: 2,
-            type: 'ammo_grejuva',
-            desc: {
-              tr: '16 altın • Sönmeyen Rum ateşi 2 tur boyunca düşman bloklarını yakar.',
-              en: '16 gold • Unquenchable liquid fire burns enemy blocks for 2 turns.'
-            }
-          },
-          skill2: {
-            id: 'sur_tahkimi',
-            name: { tr: 'SUR TAHKİMİ', en: 'WALL FORTIFY' },
-            cost: 14,
-            cooldown: 2,
-            type: 'instant_fortify',
-            desc: {
-              tr: '14 altın • Hasarlı taş blokları anında onarır (+26 Kale Canı).',
-              en: '14 gold • Instantly reinforces damaged masonry (+26 Castle HP).'
-            }
-          }
-        },
-        kutsal_roma: {
-          id: 'kutsal_roma',
-          name: { tr: 'KUTSAL ROMA', en: 'HOLY ROME' },
-          fullName: { tr: 'Kutsal Roma & Tapınak', en: 'Holy Roman Empire' },
-          primaryColor: '#1d4ed8',
-          secondaryColor: '#cbd5e1',
-          passiveName: { tr: 'Çelik Zırhlı Burç', en: 'Ironclad Bastion' },
-          passiveDesc: {
-            tr: 'Kale başlangıç dayanıklılığı +%12 daha yüksektir.',
-            en: 'Starting castle structural durability is +12% higher.'
-          },
-          hpMult: 1.12,
-          stoneArmorMult: 0.9,
-          heavyDamageMult: 1.05,
-          goldBonus: 0,
-          windResist: 0,
-          speedMult: 1.0,
-          skill1: {
-            id: 'dev_trebuchet',
-            name: { tr: 'DEV TREBUCHET', en: 'GRAND TREBUCHET' },
-            cost: 18,
-            cooldown: 2,
-            type: 'ammo_trebuchet',
-            desc: {
-              tr: '18 altın • Dik açıyla düşen devasa kaya kütlesi çatıları çökertir (Sv. 2 Trebuchet gerektirir).',
-              en: '18 gold • High-arcing colossal boulder crushes enemy roofs (Requires Lv. 2 Trebuchet).'
-            }
-          },
-          skill2: {
-            id: 'kutsal_kalkan',
-            name: { tr: 'KUTSAL KALKAN', en: 'HOLY AEGIS' },
-            cost: 15,
-            cooldown: 3,
-            type: 'instant_shield',
-            desc: {
-              tr: '15 altın • Bir sonraki düşman turunda alınan hasarı %45 azaltır.',
-              en: '15 gold • Reduces incoming damage by 45% during the enemy turn.'
-            }
-          }
-        },
-        memluk: {
-          id: 'memluk',
-          name: { tr: 'MEMLÜK', en: 'MAMLUK' },
-          fullName: { tr: 'Memlük Sultanlığı', en: 'Mamluk Sultanate' },
-          primaryColor: '#d97706',
-          secondaryColor: '#fef08a',
-          passiveName: { tr: 'İpek Yolu Hazinesi', en: 'Silk Road Treasury' },
-          passiveDesc: {
-            tr: 'Her tur Savaş Hazinesine +4 ekstra altın geliri sağlar.',
-            en: 'Generates +4 bonus gold for your War Treasury every turn.'
-          },
-          hpMult: 1.0,
-          stoneArmorMult: 1.0,
-          heavyDamageMult: 1.0,
-          goldBonus: 4,
-          windResist: 0.15,
-          speedMult: 1.0,
-          skill1: {
-            id: 'kum_firtinasi',
-            name: { tr: 'KUM FIRTINASI', en: 'SANDSTORM' },
-            cost: 12,
-            cooldown: 2,
-            type: 'instant_sandstorm',
-            desc: {
-              tr: '12 altın • Rüzgar yönünü sertçe değiştirerek rakibin nişanını bozar.',
-              en: '12 gold • Reverses wind direction sharply to disrupt rival aim.'
-            }
-          },
-          skill2: {
-            id: 'neft_yagmuru',
-            name: { tr: 'NEFT YAĞMURU', en: 'NAPHTHA RAIN' },
-            cost: 18,
-            cooldown: 2,
-            type: 'ammo_neft',
-            desc: {
-              tr: '18 altın • Geniş alana yayılan 5 yanıcı neft bombası fırlatır.',
-              en: '18 gold • Launches a spread of 5 incendiary naphtha bombs.'
-            }
-          }
-        },
-        mogol: {
-          id: 'mogol',
-          name: { tr: 'MOĞOL', en: 'MONGOL' },
-          fullName: { tr: 'Moğol İmparatorluğu', en: 'Mongol Empire' },
-          primaryColor: '#0284c7',
-          secondaryColor: '#f8fafc',
-          passiveName: { tr: 'Bozkır Fırtınası', en: 'Steppe Tempest' },
-          passiveDesc: {
-            tr: 'Mermiler %10 daha hızlı uçar ve rüzgardan %35 daha az etkilenir.',
-            en: 'Projectiles fly 10% faster and suffer 35% less wind drift.'
-          },
-          hpMult: 0.96,
-          stoneArmorMult: 1.0,
-          heavyDamageMult: 1.05,
-          goldBonus: 2,
-          windResist: 0.35,
-          speedMult: 1.1,
-          skill1: {
-            id: 'atesli_ok_baraji',
-            name: { tr: 'ATEŞLİ OK BARAJI', en: 'FIRE ARROW VOLLEY' },
-            cost: 16,
-            cooldown: 2,
-            type: 'ammo_arrows',
-            desc: {
-              tr: '16 altın • 7 adet yanıcı ok yağmuru ile ahşap surları küle çevirir.',
-              en: '16 gold • Rain of 7 flaming arrows incinerates wooden battlements.'
-            }
-          },
-          skill2: {
-            id: 'barut_ficisi',
-            name: { tr: 'BARUT FIÇISI', en: 'POWDER KEG' },
-            cost: 20,
-            cooldown: 2,
-            type: 'ammo_barrel',
-            desc: {
-              tr: '20 altın • Çok geniş patlama yarıçaplı Çin barutu fıçısı fırlatır (Sv. 3 Tunç Top gerektirir).',
-              en: '20 gold • Hurls a black-powder barrel with a massive blast radius (Requires Lv. 3 Cannon).'
-            }
-          }
-        }
-      };
-
-      const KINGDOM_LIST = Object.values(KINGDOMS);
-      const getKName = (k) => k.name[currentLang] || k.name.tr;
-      const getKFullName = (k) => k.fullName[currentLang] || k.fullName.tr;
-      const getKPassiveName = (k) => k.passiveName[currentLang] || k.passiveName.tr;
-      const getKPassiveDesc = (k) => k.passiveDesc[currentLang] || k.passiveDesc.tr;
-      const getSkillName = (sk) => sk.name[currentLang] || sk.name.tr;
-      const getSkillDesc = (sk) => sk.desc[currentLang] || sk.desc.tr;
-
-      /* =========================================================================
-       * 3. 6-CHAPTER HISTORICAL CONQUEST CAMPAIGN (BILINGUAL)
-       * ========================================================================= */
-      const CHAPTERS = [
-        {
-          id: 1,
-          title: { tr: 'BÖLÜM 1 • SINIR KARAKOLU', en: 'CHAPTER 1 • BORDER OUTPOST' },
-          shortName: { tr: 'Sınır Karakolu', en: 'Border Outpost' },
-          mapPos: { x: 11, y: 74 },
-          enemyKingdom: 'bizans',
-          aiDiff: 'easy',
-          windMode: 'calm',
-          windSurprise: 'breeze',
-          weatherNote: { tr: 'Genelde Rüzgarsız (Ara sıra hafif esinti)', en: 'Mostly Calm (Occasional light breeze)' },
-          skyTheme: 'day',
-          rewardGold: 35,
-          castleLayout: 'outpost',
-          lore: {
-            tr: 'Fetih ordumuz şafak vakti sınır vadisine ulaştı. Ufukta Bizans uç beyinin ahşap ve tuğla tahkimatlı karakolu yükseliyor.',
-            en: 'Our conquest army reached the border valley at dawn. On the horizon rises the timber-and-brick outpost of the Byzantine march.'
-          },
-          taunts: {
-            tr: [
-              { speaker: 'enemy', text: 'Bu vadiden tek bir nefer bile geçemez! Surlarımız geçit vermeyecek!' },
-              { speaker: 'player', text: 'Mancınıkları kurun! Bu sınır karakolu güneş batmadan sancağımızla taçlanacak!' }
-            ],
-            en: [
-              { speaker: 'enemy', text: 'Not a single soldier shall pass this valley! Our walls will never yield!' },
-              { speaker: 'player', text: 'Ready the catapults! Before sunset, our royal banner will fly over this outpost!' }
-            ]
-          },
-          desc: {
-            tr: 'Sınır hattındaki ilk Bizans karakolu. Rüzgar sakin, surlar ahşap ve tuğla ağırlıklı.',
-            en: 'First frontier outpost. Calm winds with timber and brick defenses.'
-          }
-        },
-        {
-          id: 2,
-          title: { tr: 'BÖLÜM 2 • BOĞAZ HİSARI', en: 'CHAPTER 2 • STRAIT FORTRESS' },
-          shortName: { tr: 'Boğaz Hisarı', en: 'Strait Fortress' },
-          mapPos: { x: 31, y: 33 },
-          enemyKingdom: 'bizans',
-          aiDiff: 'easy',
-          windMode: 'normal',
-          windSurprise: 'strait_shift',
-          weatherNote: { tr: 'Lodos & Poyraz (Her tur yön değiştiren rüzgar)', en: 'Strait Gales (Reversing crosswinds)' },
-          skyTheme: 'dusk',
-          rewardGold: 45,
-          castleLayout: 'strait',
-          lore: {
-            tr: 'Sert deniz rüzgarlarının dövdüğü Boğaz Hisarı, ikiz taş kuleleriyle geçiş yolunu kapatıyor.',
-            en: 'Battered by fierce sea gales, the Strait Fortress blocks the passage with twin stone towers.'
-          },
-          taunts: {
-            tr: [
-              { speaker: 'player', text: 'Boğazın kilidini açmaya geldik! Kapıları açın ve kan dökülmesin!' },
-              { speaker: 'enemy', text: 'Grejuva ateşimiz gemilerinizi de mancınıklarınızı da küle çevirecek!' }
-            ],
-            en: [
-              { speaker: 'player', text: 'We have come to unlock the strait! Open the gates and spare your garrison!' },
-              { speaker: 'enemy', text: 'Our Greek Fire will turn both your ships and siege engines into ash!' }
-            ]
-          },
-          desc: {
-            tr: 'Boğaz rüzgarlarının estiği çift taş kuleli tahkimat.',
-            en: 'Twin stone-towered citadel swept by coastal crosswinds.'
-          }
-        },
-        {
-          id: 3,
-          title: { tr: 'BÖLÜM 3 • ÇÖL KALESİ', en: 'CHAPTER 3 • DESERT CITADEL' },
-          shortName: { tr: 'Çöl Kalesi', en: 'Desert Citadel' },
-          mapPos: { x: 52, y: 71 },
-          enemyKingdom: 'memluk',
-          aiDiff: 'normal',
-          windMode: 'normal',
-          windSurprise: 'sandstorm',
-          weatherNote: { tr: 'Çöl Sürprizi (Her 3 turda ani kum fırtınası)', en: 'Desert Surprise (Sudden sandstorm every 3 turns)' },
-          skyTheme: 'desert',
-          rewardGold: 55,
-          castleLayout: 'desert',
-          lore: {
-            tr: 'Kızgın kumların ortasındaki vaha kalesi, altın yüklü kervan yollarının tam kalbinde yer alıyor.',
-            en: 'Rising amidst scorching dunes, the oasis citadel commands the heart of the golden caravan routes.'
-          },
-          taunts: {
-            tr: [
-              { speaker: 'enemy', text: 'Çölün kum fırtınaları ordunu yutacak! Buradan geri dönün!' },
-              { speaker: 'player', text: 'Ne çöl sıcağı ne de yüksek burçlar bizi durdurabilir! Ateş serbest!' }
-            ],
-            en: [
-              { speaker: 'enemy', text: 'The desert sandstorms will swallow your host whole! Turn back now!' },
-              { speaker: 'player', text: 'Neither scorching sands nor lofty bastions can halt our advance! Open fire!' }
-            ]
-          },
-          desc: {
-            tr: 'Memlük muhafızlarının koruduğu yüksek burçlu çöl kalesi.',
-            en: 'High-bastioned desert stronghold guarded by Mamluk warriors.'
-          }
-        },
-        {
-          id: 4,
-          title: { tr: 'BÖLÜM 4 • DEMİR BURÇ', en: 'CHAPTER 4 • IRON BASTION' },
-          shortName: { tr: 'Demir Burç', en: 'Iron Bastion' },
-          mapPos: { x: 71, y: 30 },
-          enemyKingdom: 'kutsal_roma',
-          aiDiff: 'normal',
-          windMode: 'normal',
-          windSurprise: 'mountain_eddy',
-          weatherNote: { tr: 'Dağ Anaforu (Bir tur durgun, bir tur sert rüzgar)', en: 'Mountain Eddy (Alternating dead calm & sharp gusts)' },
-          skyTheme: 'overcast',
-          rewardGold: 65,
-          castleLayout: 'bastion',
-          lore: {
-            tr: 'Kara bulutların gölgesindeki Demir Burç, kalın kesme taş duvarlarıyla aşılmaz bir kale görünümünde.',
-            en: 'Beneath dark storm clouds, the Iron Bastion stands behind thick cut-stone ramparts.'
-          },
-          taunts: {
-            tr: [
-              { speaker: 'enemy', text: 'Zırhlı şövalyelerimiz ve çelik burçlarımız karşısında taşlarınız toz olur!' },
-              { speaker: 'player', text: 'En kalın taş duvar bile ağır top güllelerinin gazabına dayanamaz!' }
-            ],
-            en: [
-              { speaker: 'enemy', text: 'Against our armored knights and iron bastions, your stones shatter into dust!' },
-              { speaker: 'player', text: 'Not even the thickest stone wall can withstand the fury of heavy cannonballs!' }
-            ]
-          },
-          desc: {
-            tr: 'Kalın kesme taş duvarlarla örülü zırhlı şövalye kalesi.',
-            en: 'Armored knight fortress reinforced with heavy cut-stone walls.'
-          }
-        },
-        {
-          id: 5,
-          title: { tr: 'BÖLÜM 5 • BOZKIR OTAĞI', en: 'CHAPTER 5 • STEPPE ENCAMPMENT' },
-          shortName: { tr: 'Bozkır Otağı', en: 'Steppe Fort' },
-          mapPos: { x: 82, y: 66 },
-          enemyKingdom: 'mogol',
-          aiDiff: 'hard',
-          windMode: 'storm',
-          windSurprise: 'steppe_gale',
-          weatherNote: { tr: 'Bozkır Kasırgası (Sert ve değişken rüzgarlar)', en: 'Steppe Gale (Fierce shifting winds)' },
-          skyTheme: 'crimson',
-          rewardGold: 80,
-          castleLayout: 'steppe',
-          lore: {
-            tr: 'Kızıl ufukta fırtına koparken bozkırın hızlı atlıları ateşli ok yağmuruyla savunma hattı kurdu.',
-            en: 'As gales howl beneath a crimson sky, swift steppe horsemen unleash volleys of flaming arrows.'
-          },
-          taunts: {
-            tr: [
-              { speaker: 'player', text: 'Fırtına sizinle olabilir ama zafer bizim topçularımızın olacak!' },
-              { speaker: 'enemy', text: 'Oklarımız gökyüzünü karartacak, barut fıçılarımız kalenizi yerle bir edecek!' }
-            ],
-            en: [
-              { speaker: 'player', text: 'The storm may blow in your favor, yet victory belongs to our artillery!' },
-              { speaker: 'enemy', text: 'Our arrows will darken the sky and our powder kegs will level your keep!' }
-            ]
-          },
-          desc: {
-            tr: 'Şiddetli fırtına altında hızlı atış yapan bozkır ordusu.',
-            en: 'Swift steppe horde firing relentlessly through howling gale winds.'
-          }
-        },
-        {
-          id: 6,
-          title: { tr: 'BÖLÜM 6 • İMPARATORLUK KALESİ', en: 'CHAPTER 6 • IMPERIAL CITADEL' },
-          shortName: { tr: 'İmparatorluk Kalesi', en: 'Imperial Citadel' },
-          mapPos: { x: 91, y: 42 },
-          enemyKingdom: 'bizans',
-          aiDiff: 'hard',
-          windMode: 'storm',
-          windSurprise: 'imperial_tempest',
-          weatherNote: { tr: 'İmparatorluk Fırtınası (Yüksek şiddetli rüzgar dalgaları)', en: 'Imperial Tempest (Extreme storm gusts)' },
-          skyTheme: 'imperial',
-          rewardGold: 120,
-          castleLayout: 'imperial',
-          lore: {
-            tr: 'Büyük seferin son durağı! Üç katlı kadim surların ardında İmparatorluk Sancağı dalgalanıyor.',
-            en: 'The final climax of the grand campaign! Behind triple ancient ramparts flies the Imperial Banner.'
-          },
-          taunts: {
-            tr: [
-              { speaker: 'enemy', text: 'Bin yıllık imparatorluk surları önünde diz çökeceksiniz! Burası sonunuz!' },
-              { speaker: 'player', text: 'Tarih yeniden yazılıyor! Tüm toplar ateşlensin, İmparatorluk Kalesi bizimdir!' }
-            ],
-            en: [
-              { speaker: 'enemy', text: 'Kneel before the thousand-year imperial walls! Your conquest ends here!' },
-              { speaker: 'player', text: 'History is rewritten today! Fire every cannon—the Imperial Citadel is ours!' }
-            ]
-          },
-          desc: {
-            tr: 'Üç katlı kesme taş surlar ve Grejuva ateşiyle korunan büyük başkent!',
-            en: 'The grand capital defended by triple cut-stone walls and Greek Fire!'
-          }
-        }
-      ];
-
-      const getChTitle = (ch) => ch.title[currentLang] || ch.title.tr;
-      const getChShort = (ch) => ch.shortName[currentLang] || ch.shortName.tr;
-      const getChLore = (ch) => ch.lore[currentLang] || ch.lore.tr;
-      const getChDesc = (ch) => ch.desc[currentLang] || ch.desc.tr;
-      const getChWeather = (ch) => (ch.weatherNote && (ch.weatherNote[currentLang] || ch.weatherNote.tr)) || '';
-      const getChTaunts = (ch) => ch.taunts[currentLang] || ch.taunts.tr;
-
-      /* =========================================================================
-       * 4. SVG PORTRAIT & EMBLEM HELPER
-       * ========================================================================= */
-      function getKingdomPortraitSVG(kingdomId) {
-        if (kingdomId === 'osmanli') {
-          return `<svg viewBox="0 0 64 64" class="w-full h-full">
-            <rect width="64" height="64" fill="#7f1d1d"/>
-            <circle cx="32" cy="36" r="14" fill="#f3c69f"/>
-            <path d="M16 58 C18 45, 46 45, 48 58 Z" fill="#b91c1c"/>
-            <path d="M22 24 L42 24 L38 11 L26 11 Z" fill="#f8fafc"/>
-            <rect x="20" y="21" width="24" height="5" rx="2" fill="#f59e0b"/>
-            <circle cx="28" cy="35" r="1.8" fill="#1e293b"/>
-            <circle cx="36" cy="35" r="1.8" fill="#1e293b"/>
-            <path d="M27 41 Q32 44 37 41" stroke="#451a03" stroke-width="2" fill="none"/>
-          </svg>`;
-        }
-        if (kingdomId === 'bizans') {
-          return `<svg viewBox="0 0 64 64" class="w-full h-full">
-            <rect width="64" height="64" fill="#4c1d95"/>
-            <circle cx="32" cy="36" r="14" fill="#f3c69f"/>
-            <path d="M16 58 C18 45, 46 45, 48 58 Z" fill="#6b21a8"/>
-            <path d="M20 23 L24 14 L32 19 L40 14 L44 23 Z" fill="#eab308"/>
-            <circle cx="32" cy="14" r="2.5" fill="#fef08a"/>
-            <circle cx="28" cy="35" r="1.8" fill="#1e293b"/>
-            <circle cx="36" cy="35" r="1.8" fill="#1e293b"/>
-            <path d="M26 42 Q32 46 38 42" stroke="#3b0764" stroke-width="2.5" fill="none"/>
-          </svg>`;
-        }
-        if (kingdomId === 'kutsal_roma') {
-          return `<svg viewBox="0 0 64 64" class="w-full h-full">
-            <rect width="64" height="64" fill="#1e3a8a"/>
-            <path d="M18 58 C20 45, 44 45, 46 58 Z" fill="#cbd5e1"/>
-            <rect x="21" y="18" width="22" height="24" rx="8" fill="#94a3b8"/>
-            <rect x="30" y="21" width="4" height="18" fill="#1e293b"/>
-            <rect x="24" y="28" width="16" height="3.5" fill="#1e293b"/>
-            <path d="M24 18 L32 10 L40 18 Z" fill="#eab308"/>
-          </svg>`;
-        }
-        if (kingdomId === 'memluk') {
-          return `<svg viewBox="0 0 64 64" class="w-full h-full">
-            <rect width="64" height="64" fill="#92400e"/>
-            <circle cx="32" cy="36" r="14" fill="#e5b388"/>
-            <path d="M16 58 C18 45, 46 45, 48 58 Z" fill="#d97706"/>
-            <ellipse cx="32" cy="21" rx="14" ry="8" fill="#fef3c7"/>
-            <path d="M32 12 L34 18 L30 18 Z" fill="#059669"/>
-            <circle cx="28" cy="35" r="1.8" fill="#1e293b"/>
-            <circle cx="36" cy="35" r="1.8" fill="#1e293b"/>
-          </svg>`;
-        }
-        return `<svg viewBox="0 0 64 64" class="w-full h-full">
-          <rect width="64" height="64" fill="#075985"/>
-          <circle cx="32" cy="36" r="14" fill="#eab98e"/>
-          <path d="M16 58 C18 45, 46 45, 48 58 Z" fill="#0284c7"/>
-          <path d="M20 24 Q32 10 44 24 Z" fill="#dc2626"/>
-          <rect x="30.5" y="7" width="3" height="8" fill="#f8fafc"/>
-          <circle cx="28" cy="35" r="1.8" fill="#1e293b"/>
-          <circle cx="36" cy="35" r="1.8" fill="#1e293b"/>
-        </svg>`;
-      }
-
-      /* =========================================================================
-       * 5. SEEDED PRNG & PERSISTENT CAMPAIGN SAVE
-       * ========================================================================= */
-      function createSeededRandom(seed) {
-        let s = seed >>> 0;
-        return function () {
-          s += 0x6D2B79F5;
-          let t = Math.imul(s ^ (s >>> 15), 1 | s);
-          t ^= t + Math.imul(t ^ (t >>> 7), 61 | t);
-          return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-        };
-      }
-
       const DEFAULT_SAVE = {
         unlockedChapter: 1,
         stars: {},
-        campaignGold: 60,
+        campaignGold: 80,
         upgrades: { siegeEngine: 0, power: 0, treasury: 0, fortress: 0 }
       };
 
@@ -2573,33 +2452,32 @@
             ? playerProgress.upgrades
             : { siegeEngine: 0, power: 0, treasury: 0, fortress: 0 };
 
-          const baseHp = 240;
-          const p1MaxHp = Math.round((baseHp + upg.fortress * 28) * p1K.hpMult);
-          const p2MaxHp = Math.round((baseHp + (this.mode === 'campaign' ? (this.chapterId - 1) * 16 : 0)) * p2K.hpMult);
+          const baseHp = 480;
+          const chapterEnemyHpBonus = this.mode === 'campaign'
+            ? ([-40, 20, 80, 150, 220, 320][this.chapterId - 1] || 0)
+            : 0;
+          const p1MaxHp = Math.round((baseHp + upg.fortress * 55) * p1K.hpMult);
+          const p2MaxHp = Math.round((baseHp + chapterEnemyHpBonus) * p2K.hpMult);
 
-          const startGold1 = (this.mode === 'campaign' ? playerProgress.campaignGold : 52) + upg.treasury * 10 + p1K.goldBonus;
-          const startGold2 = 52 + p2K.goldBonus + (this.mode === 'campaign' ? (this.chapterId - 1) * 5 : 0);
+          const startGold1 = (this.mode === 'campaign' ? playerProgress.campaignGold : 85) + upg.treasury * 25 + p1K.goldBonus;
+          const startGold2 = 85 + p2K.goldBonus + (this.mode === 'campaign' ? (this.chapterId - 1) * 15 : 0);
 
           const p1Tier = this.mode === 'campaign'
-            ? Math.min(3, upg.siegeEngine || 0)
-            : Math.min(3, config.p1SiegeTier !== undefined ? config.p1SiegeTier : 0);
-
+            ? (upg.siegeEngine || 0)
+            : (config.p1SiegeTier || 0);
           const p2Tier = this.mode === 'campaign'
-            ? (this.chapterId <= 2 ? 0 : this.chapterId <= 4 ? 1 : this.chapterId === 5 ? 2 : 3)
-            : Math.min(3, config.p2SiegeTier !== undefined ? config.p2SiegeTier : p1Tier);
+            ? (this.chapterId >= 5 ? 3 : this.chapterId >= 3 ? 2 : this.chapterId >= 2 ? 1 : 0)
+            : (config.p2SiegeTier || 0);
 
-          this.players = [
-            this._createPlayerState(0, p1K, p1MaxHp, startGold1, upg.power, p1Tier),
-            this._createPlayerState(1, p2K, p2MaxHp, startGold2, 0, p2Tier)
-          ];
+          this.players[0] = this._createPlayerState(0, p1K, p1MaxHp, startGold1, upg.power, p1Tier);
+          this.players[1] = this._createPlayerState(1, p2K, p2MaxHp, startGold2, 0, p2Tier);
 
           this.blocks = [];
-          this._buildCastle(0, p1K, this.mode === 'campaign' ? 'standard' : this.castleLayout);
+          this._buildCastle(0, p1K, this.castleLayout);
           this._buildCastle(1, p2K, this.castleLayout);
 
           this._rollWind(false);
-
-          if (this.mode === 'online' && onlineMgr.role === 'guest') {
+          if (this.mode === 'online' && !onlineMgr.isDemo && onlineMgr.role === 'guest') {
             this.phase = 'online_waiting';
           } else {
             this.phase = 'aim';
@@ -2624,7 +2502,7 @@
             shieldActive: false,
             skill1Cooldown: 0,
             skill2Cooldown: 0,
-            powerUpgMult: 1 + powerUpgLevel * 0.08,
+            powerUpgMult: 1 + powerUpgLevel * 0.10,
             catapultX: side === 0 ? 405 : this.W - 405,
             catapultY: this.groundY,
             recoil: 0
@@ -2665,8 +2543,8 @@
           const p = this.getActivePlayer();
           if (!p || p.siegeTier >= 3) return;
 
-          const upgradeCosts = [24, 34, 46];
-          const cost = upgradeCosts[p.siegeTier] || 30;
+          const upgradeCosts = [150, 300, 450];
+          const cost = upgradeCosts[p.siegeTier] || 450;
           if (p.gold < cost) {
             showToast(t('toastInsufficientGold', cost));
             return;
@@ -2780,7 +2658,7 @@
               const isTopOfCol = (r === h - 1) && (c !== prof.keepCol);
               const roofType = isTopOfCol ? (prof.towerRoofs[c] || 'merlon') : 'none';
 
-              const baseBlockHp = mat === 'stone' ? 68 : mat === 'brick' ? 42 : 28;
+              const baseBlockHp = mat === 'stone' ? 130 : mat === 'brick' ? 75 : 45;
               this.blocks.push({
                 id: `${side}_${c}_${r}`,
                 side,
@@ -2814,8 +2692,8 @@
                 w: blockW,
                 h: blockH + 6,
                 mat: 'stone',
-                hp: 88,
-                maxHp: 88,
+                hp: 165,
+                maxHp: 165,
                 burnTurns: 0,
                 isKeep: true,
                 roofType: 'keep',
@@ -2903,9 +2781,9 @@
             }
             p.gold -= 12;
             p.activeSkillAmmo = null;
-            this._healCastle(p, 28);
+            this._healCastle(p, 55);
             sound.playFanfare('repair');
-            this._spawnFloatingText(p.catapultX, p.catapultY - 85, t('floatRepair', 28), '#6ee7b7');
+            this._spawnFloatingText(p.catapultX, p.catapultY - 85, t('floatRepair', 55), '#6ee7b7');
             this._advanceTurn();
             return;
           }
@@ -2960,9 +2838,9 @@
             p.gold -= cost;
             if (slotNum === 1) p.skill1Cooldown = skill.cooldown;
             else p.skill2Cooldown = skill.cooldown;
-            this._healCastle(p, 28);
+            this._healCastle(p, 55);
             sound.playFanfare('repair');
-            this._spawnFloatingText(p.catapultX, p.catapultY - 90, t('floatRepair', 28), '#6ee7b7');
+            this._spawnFloatingText(p.catapultX, p.catapultY - 90, t('floatRepair', 55), '#6ee7b7');
             this._advanceTurn();
             return;
           }
@@ -3208,6 +3086,9 @@
               }
               if (blk.mat === 'stone') {
                 dmg *= defender.kingdom.stoneArmorMult;
+                const attackerTier = attacker.siegeTier || 0;
+                if (attackerTier === 0) dmg *= 0.78;
+                else if (attackerTier >= 2) dmg *= 1.15;
               }
               if (defender.shieldActive) {
                 dmg *= 0.55;
@@ -3243,7 +3124,7 @@
 
           if (totalDealtToEnemy > 0) {
             sound.playImpact('brick', hitKeep);
-            const scaledHpLoss = Math.max(5, Math.round(totalDealtToEnemy * 0.44));
+            const scaledHpLoss = Math.max(6, Math.round(totalDealtToEnemy * 0.34));
             defender.hp = Math.max(0, defender.hp - scaledHpLoss);
 
             const remainingBlocks = this.blocks.filter(b => b.side === enemySide && b.hp > 0);
@@ -3257,7 +3138,7 @@
               this._spawnFloatingText(pr.x, pr.y - 24, `-${scaledHpLoss}`, '#fca5a5');
             }
 
-            const lootGold = Math.min(18, 4 + destroyedCount * 3 + (hitKeep ? 4 : 0));
+            const lootGold = Math.min(32, 8 + destroyedCount * 5 + (hitKeep ? 8 : 0));
             attacker.gold += lootGold;
             this._spawnFloatingText(attacker.catapultX, attacker.catapultY - 76, t('floatLoot', lootGold), '#fde047');
           }
@@ -3288,7 +3169,7 @@
           }
 
           const nextP = this.getActivePlayer();
-          nextP.gold += 6 + (nextP.kingdom.goldBonus || 0);
+          nextP.gold += 12 + (nextP.kingdom.goldBonus || 0);
           nextP.shieldActive = false;
           if (nextP.skill1Cooldown > 0) nextP.skill1Cooldown -= 1;
           if (nextP.skill2Cooldown > 0) nextP.skill2Cooldown -= 1;
@@ -3354,9 +3235,9 @@
 
           if (ai.hp < ai.maxHp * 0.38 && ai.gold >= 12 && Math.random() < 0.45) {
             ai.gold -= 12;
-            this._healCastle(ai, 28);
+            this._healCastle(ai, 55);
             sound.playFanfare('repair');
-            this._spawnFloatingText(ai.catapultX, ai.catapultY - 85, t('floatRepair', 28), '#6ee7b7');
+            this._spawnFloatingText(ai.catapultX, ai.catapultY - 85, t('floatRepair', 55), '#6ee7b7');
             this._advanceTurn();
             return;
           }
@@ -5126,7 +5007,9 @@
         t('campUpgrades').forEach(u => {
           const lvl = playerProgress.upgrades[u.key] || 0;
           const maxLvl = u.maxLvl || 4;
-          const cost = u.baseCost + lvl * 20;
+          const cost = u.key === 'siegeEngine'
+            ? ([150, 300, 450][lvl] || 450)
+            : (u.baseCost + lvl * 35);
           const isMax = lvl >= maxLvl;
           const tierSub = u.key === 'siegeEngine' && t('siegeTiers')[lvl]
             ? `<div class="text-[10px] text-emerald-300 font-semibold mt-0.5">✓ ${t('siegeTiers')[lvl].name}</div>`
@@ -5438,7 +5321,7 @@
         // 4-Tier Siege Engine HUD Button & Cannonball Lock Status
         const tierIdx = displayPlayer.siegeTier || 0;
         const tierInfo = t('siegeTiers')[tierIdx];
-        const upgCosts = [24, 34, 46];
+        const upgCosts = [150, 300, 450];
         const nextUpgCost = upgCosts[tierIdx] || 0;
         const btnUpgHud = document.getElementById('btnUpgradeSiegeHud');
         document.getElementById('siegeHudName').textContent = `⚙️ ${tierInfo.short}`;
@@ -5533,7 +5416,7 @@
             btnPrimary.textContent = ch.id < 6 ? t('resultNextChapter') : t('resultConquestMap');
             btnSecondary.textContent = t('resultMainMenu');
           } else {
-            playerProgress.campaignGold += 10;
+            playerProgress.campaignGold += 25;
             saveProgress(playerProgress);
 
             document.getElementById('resultIcon').textContent = '💀';
