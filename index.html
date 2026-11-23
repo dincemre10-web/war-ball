@@ -931,6 +931,9 @@
         <div id="resultRewardBox" class="p-3 rounded-xl bg-[#131029] border border-[#8c6f3e] text-xs text-amber-300 font-bold">
           Kazanılan Ganimet: +35 Altın
         </div>
+        <div id="resultRematchStatus" class="hidden px-3 py-2 rounded-xl bg-sky-950/80 border border-sky-400/60 text-xs font-semibold text-sky-200 animate-pulse">
+          Rakibin rövanş onayı bekleniyor...
+        </div>
         <div class="flex flex-col sm:flex-row flex-wrap gap-2 pt-2">
           <button id="btnResultSecondary" type="button" class="royal-btn-secondary flex-1 py-2.5 px-3 rounded-xl text-xs sm:text-sm">Ana Menü</button>
           <button id="btnResultUpgrades" type="button" class="hidden royal-btn-secondary flex-1 py-2.5 px-3 rounded-xl text-xs sm:text-sm border-amber-400/80 text-amber-200">⚒️ Geliştirmeler</button>
@@ -1210,6 +1213,13 @@
           resultQuickDesc: (name) => `${name} ordusu düşman surlarını yerle bir ederek savaşı kazandı!`,
           resultRemainingHp: (hp) => `Kalan Kale Dayanıklılığı: ${hp} HP`,
           resultPlayAgain: 'Tekrar Oyna',
+          rematchBtn: '⚔️ Rövanş İste',
+          rematchWaiting: '⏳ Rövanş Bekleniyor...',
+          rematchAcceptBtn: '⚔️ Rövanşı Kabul Et!',
+          rematchIncomingBanner: '🔥 Rakibin rövanş istiyor!',
+          rematchSentBanner: '⏳ Rövanş isteği gönderildi, rakip bekleniyor...',
+          rematchStartingToast: '⚔️ Rövanş savaşı başlıyor!',
+          rematchOpponentLeft: 'Rakip rövanş ekranından ayrıldı.',
           toastLangChanged: 'Dil Türkçe olarak ayarlandı',
           toastMuted: 'Sesler kapatıldı',
           toastUnmuted: 'Sesler açıldı',
@@ -1426,6 +1436,13 @@
           resultQuickDesc: (name) => `${name} shattered the enemy ramparts and claimed victory!`,
           resultRemainingHp: (hp) => `Remaining Fortress Integrity: ${hp} HP`,
           resultPlayAgain: 'Play Again',
+          rematchBtn: '⚔️ Request Rematch',
+          rematchWaiting: '⏳ Waiting for Rematch...',
+          rematchAcceptBtn: '⚔️ Accept Rematch!',
+          rematchIncomingBanner: '🔥 Opponent wants a rematch!',
+          rematchSentBanner: '⏳ Rematch request sent, waiting for opponent...',
+          rematchStartingToast: '⚔️ Rematch battle starting!',
+          rematchOpponentLeft: 'Opponent left the rematch screen.',
           toastLangChanged: 'Language set to English',
           toastMuted: 'Audio muted',
           toastUnmuted: 'Audio enabled',
@@ -2181,8 +2198,14 @@
           this.hostKingdom = 'osmanli';
           this.guestKingdom = 'bizans';
           this.seed = 123456;
+          this.localWantsRematch = false;
+          this.remoteWantsRematch = false;
           this.onOpponentJoined = null;
           this.onOpponentShot = null;
+          this.onRemoteAction = null;
+          this.onTurnSync = null;
+          this.onMatchOver = null;
+          this.onRematchSignal = null;
           this.onChatMessage = null;
         }
 
@@ -2199,6 +2222,8 @@
           this.isDemo = false;
           this.role = null;
           this.roomCode = '';
+          this.localWantsRematch = false;
+          this.remoteWantsRematch = false;
         }
 
         createRoom(hostKingdom) {
@@ -2320,6 +2345,22 @@
               if (this.onOpponentShot) {
                 this.onOpponentShot(msg);
               }
+            } else if (msg.type === 'ACTION') {
+              if (this.onRemoteAction) {
+                this.onRemoteAction(msg);
+              }
+            } else if (msg.type === 'TURN_SYNC') {
+              if (this.onTurnSync) {
+                this.onTurnSync(msg);
+              }
+            } else if (msg.type === 'MATCH_OVER') {
+              if (this.onMatchOver) {
+                this.onMatchOver(msg);
+              }
+            } else if (msg.type === 'REMATCH_REQUEST' || msg.type === 'REMATCH_START' || msg.type === 'LEAVE_ROOM') {
+              if (this.onRematchSignal) {
+                this.onRematchSignal(msg);
+              }
             } else if (msg.type === 'CHAT') {
               if (this.onChatMessage) {
                 this.onChatMessage(msg);
@@ -2328,8 +2369,12 @@
           });
 
           connection.on('close', () => {
-            if (this.active && !engine.gameOver) {
-              showToast(t('toastOpponentLeft'));
+            if (this.active) {
+              if (!engine.gameOver) {
+                showToast(t('toastOpponentLeft'));
+              } else if (this.onRematchSignal) {
+                this.onRematchSignal({ type: 'LEAVE_ROOM' });
+              }
             }
           });
         }
@@ -2373,6 +2418,9 @@
           this.phase = 'aim';
           this.phaseTimer = 0;
           this.wind = 0;
+          this.physicsAccumulator = 0;
+          this.pendingTurnSync = null;
+          this.pendingMatchOver = null;
 
           this.players = [null, null];
 
@@ -2439,6 +2487,9 @@
           this.turnCount = 1;
           this.turnSide = 0;
           this.phaseTimer = 0;
+          this.physicsAccumulator = 0;
+          this.pendingTurnSync = null;
+          this.pendingMatchOver = null;
           this.projectiles = [];
           this.particles = [];
           this.debris = [];
@@ -2784,6 +2835,9 @@
             this._healCastle(p, 55);
             sound.playFanfare('repair');
             this._spawnFloatingText(p.catapultX, p.catapultY - 85, t('floatRepair', 55), '#6ee7b7');
+            if (this.mode === 'online' && !onlineMgr.isDemo) {
+              onlineMgr.postEvent({ type: 'ACTION', action: 'repair' });
+            }
             this._advanceTurn();
             return;
           }
@@ -2830,6 +2884,9 @@
             sound.playFanfare('mehter');
             this._spawnFloatingText(p.catapultX, p.catapultY - 90, t('floatMehter'), '#ffd97d');
             showToast(t('toastMehterPlayed'));
+            if (this.mode === 'online' && !onlineMgr.isDemo) {
+              onlineMgr.postEvent({ type: 'ACTION', action: 'buff_mehter', slotNum });
+            }
             onBattleStateUpdated();
             return;
           }
@@ -2841,6 +2898,9 @@
             this._healCastle(p, 55);
             sound.playFanfare('repair');
             this._spawnFloatingText(p.catapultX, p.catapultY - 90, t('floatRepair', 55), '#6ee7b7');
+            if (this.mode === 'online' && !onlineMgr.isDemo) {
+              onlineMgr.postEvent({ type: 'ACTION', action: 'instant_fortify', slotNum, cost });
+            }
             this._advanceTurn();
             return;
           }
@@ -2852,6 +2912,9 @@
             p.shieldActive = true;
             sound.playFanfare('repair');
             this._spawnFloatingText(p.catapultX, p.catapultY - 90, t('floatShield'), '#38bdf8');
+            if (this.mode === 'online' && !onlineMgr.isDemo) {
+              onlineMgr.postEvent({ type: 'ACTION', action: 'instant_shield', slotNum, cost });
+            }
             onBattleStateUpdated();
             return;
           }
@@ -2865,6 +2928,9 @@
             this.sandstormAlpha = 0.45;
             sound.playFanfare('mehter');
             this._spawnFloatingText(this.W * 0.5, 145, t('floatSandstorm'), '#fde68a');
+            if (this.mode === 'online' && !onlineMgr.isDemo) {
+              onlineMgr.postEvent({ type: 'ACTION', action: 'instant_sandstorm', slotNum, cost, wind: this.wind });
+            }
             onBattleStateUpdated();
             return;
           }
@@ -2877,6 +2943,125 @@
             showToast(t('toastSkillLoaded', getSkillName(skill)));
           }
           onBattleStateUpdated();
+        }
+
+        applyRemoteAction(msg) {
+          if (!this.running || this.gameOver || !msg) return;
+          const p = this.getActivePlayer();
+          if (!p) return;
+
+          if (msg.action === 'repair') {
+            p.gold = Math.max(0, p.gold - 12);
+            this._healCastle(p, 55);
+            sound.playFanfare('repair');
+            this._spawnFloatingText(p.catapultX, p.catapultY - 85, t('floatRepair', 55), '#6ee7b7');
+            this._advanceTurn();
+          } else if (msg.action === 'buff_mehter') {
+            p.mehterBuff = true;
+            const skill = msg.slotNum === 1 ? p.kingdom.skill1 : p.kingdom.skill2;
+            if (msg.slotNum === 1) p.skill1Cooldown = skill.cooldown;
+            else p.skill2Cooldown = skill.cooldown;
+            sound.playFanfare('mehter');
+            this._spawnFloatingText(p.catapultX, p.catapultY - 90, t('floatMehter'), '#ffd97d');
+            onBattleStateUpdated();
+          } else if (msg.action === 'instant_fortify') {
+            p.gold = Math.max(0, p.gold - (msg.cost || 16));
+            const skill = msg.slotNum === 1 ? p.kingdom.skill1 : p.kingdom.skill2;
+            if (msg.slotNum === 1) p.skill1Cooldown = skill.cooldown;
+            else p.skill2Cooldown = skill.cooldown;
+            this._healCastle(p, 55);
+            sound.playFanfare('repair');
+            this._spawnFloatingText(p.catapultX, p.catapultY - 90, t('floatRepair', 55), '#6ee7b7');
+            this._advanceTurn();
+          } else if (msg.action === 'instant_shield') {
+            p.gold = Math.max(0, p.gold - (msg.cost || 18));
+            const skill = msg.slotNum === 1 ? p.kingdom.skill1 : p.kingdom.skill2;
+            if (msg.slotNum === 1) p.skill1Cooldown = skill.cooldown;
+            else p.skill2Cooldown = skill.cooldown;
+            p.shieldActive = true;
+            sound.playFanfare('repair');
+            this._spawnFloatingText(p.catapultX, p.catapultY - 90, t('floatShield'), '#38bdf8');
+            onBattleStateUpdated();
+          } else if (msg.action === 'instant_sandstorm') {
+            p.gold = Math.max(0, p.gold - (msg.cost || 14));
+            const skill = msg.slotNum === 1 ? p.kingdom.skill1 : p.kingdom.skill2;
+            if (msg.slotNum === 1) p.skill1Cooldown = skill.cooldown;
+            else p.skill2Cooldown = skill.cooldown;
+            if (typeof msg.wind === 'number') this.wind = msg.wind;
+            this.sandstormAlpha = 0.45;
+            sound.playFanfare('mehter');
+            this._spawnFloatingText(this.W * 0.5, 145, t('floatSandstorm'), '#fde68a');
+            onBattleStateUpdated();
+          }
+        }
+
+        applyRemoteTurnSync(msg) {
+          if (!msg || this.gameOver) return;
+          if (this.phase === 'projectile') {
+            this.pendingTurnSync = msg;
+            return;
+          }
+          if (this.players[0] && typeof msg.p0Hp === 'number') this.players[0].hp = Math.max(0, msg.p0Hp);
+          if (this.players[1] && typeof msg.p1Hp === 'number') this.players[1].hp = Math.max(0, msg.p1Hp);
+          if (this.players[0] && typeof msg.p0Gold === 'number') this.players[0].gold = msg.p0Gold;
+          if (this.players[1] && typeof msg.p1Gold === 'number') this.players[1].gold = msg.p1Gold;
+          if (typeof msg.wind === 'number') this.wind = msg.wind;
+          if (typeof msg.turnSide === 'number') this.turnSide = msg.turnSide;
+          if (typeof msg.turnCount === 'number') this.turnCount = msg.turnCount;
+
+          if (this.players[1].hp <= 0) {
+            this._finishMatchAndNotify(0);
+            return;
+          }
+          if (this.players[0].hp <= 0) {
+            this._finishMatchAndNotify(1);
+            return;
+          }
+
+          const mySide = onlineMgr.role === 'guest' ? 1 : 0;
+          this.phase = this.turnSide === mySide ? 'aim' : 'online_waiting';
+          onBattleStateUpdated();
+        }
+
+        applyRemoteMatchOver(msg) {
+          if (!msg || this.gameOver) return;
+          if (this.phase === 'projectile') {
+            this.pendingMatchOver = msg;
+            return;
+          }
+          if (this.players[0] && typeof msg.p0Hp === 'number') this.players[0].hp = Math.max(0, msg.p0Hp);
+          if (this.players[1] && typeof msg.p1Hp === 'number') this.players[1].hp = Math.max(0, msg.p1Hp);
+
+          this.gameOver = true;
+          this.running = false;
+          this.projectiles = [];
+          const localSide = (this.mode === 'online' && onlineMgr.role === 'guest') ? 1 : 0;
+          if (msg.winnerSide === localSide) {
+            sound.playFanfare('victory');
+          }
+          onBattleStateUpdated();
+          onMatchCompleted(msg.winnerSide);
+        }
+
+        _finishMatchAndNotify(winnerSide) {
+          if (this.gameOver) return;
+          this.gameOver = true;
+          this.running = false;
+          this.projectiles = [];
+          const localSide = (this.mode === 'online' && onlineMgr.role === 'guest') ? 1 : 0;
+          if (winnerSide === localSide) {
+            sound.playFanfare('victory');
+          }
+          if (this.mode === 'online' && !onlineMgr.isDemo) {
+            onlineMgr.postEvent({
+              type: 'MATCH_OVER',
+              winnerSide,
+              p0Hp: this.players[0]?.hp ?? 0,
+              p1Hp: this.players[1]?.hp ?? 0
+            });
+          }
+          onBattleStateUpdated();
+          onMatchCompleted(winnerSide);
         }
 
         _healCastle(player, amount) {
@@ -3148,21 +3333,22 @@
           if (this.gameOver) return;
 
           if (this.players[1].hp <= 0) {
-            this.gameOver = true;
-            this.running = false;
-            sound.playFanfare('victory');
-            onBattleStateUpdated();
-            onMatchCompleted(0);
+            this._finishMatchAndNotify(0);
             return;
           }
           if (this.players[0].hp <= 0) {
-            this.gameOver = true;
-            this.running = false;
-            onBattleStateUpdated();
-            onMatchCompleted(1);
+            this._finishMatchAndNotify(1);
             return;
           }
 
+          if (this.pendingMatchOver) {
+            const overMsg = this.pendingMatchOver;
+            this.pendingMatchOver = null;
+            this.applyRemoteMatchOver(overMsg);
+            return;
+          }
+
+          const finishingSide = this.turnSide;
           this.turnSide = this.turnSide === 0 ? 1 : 0;
           if (this.turnSide === 0) {
             this.turnCount += 1;
@@ -3190,19 +3376,34 @@
             nextP.hp = Math.max(0, nextP.hp - hpBurn);
             this._spawnFloatingText(nextP.catapultX - (nextP.side === 0 ? 180 : -180), this.groundY - 140, t('floatBurn', hpBurn), '#fb923c');
             if (nextP.hp <= 0) {
-              this.gameOver = true;
-              this.running = false;
               const winner = nextP.side === 0 ? 1 : 0;
-              if (winner === 0) sound.playFanfare('victory');
-              onBattleStateUpdated();
-              onMatchCompleted(winner);
+              this._finishMatchAndNotify(winner);
               return;
             }
           }
 
-          if (!(this.mode === 'online' && !onlineMgr.isDemo)) {
-            this._rollWind(true);
-          } else if (onlineMgr.role === 'host') {
+          if (this.mode === 'online' && !onlineMgr.isDemo) {
+            const mySide = onlineMgr.role === 'guest' ? 1 : 0;
+            if (finishingSide === mySide) {
+              this._rollWind(true);
+              onlineMgr.postEvent({
+                type: 'TURN_SYNC',
+                turnSide: this.turnSide,
+                turnCount: this.turnCount,
+                wind: this.wind,
+                p0Hp: this.players[0].hp,
+                p1Hp: this.players[1].hp,
+                p0Gold: this.players[0].gold,
+                p1Gold: this.players[1].gold
+              });
+            } else if (this.pendingTurnSync) {
+              const syncMsg = this.pendingTurnSync;
+              this.pendingTurnSync = null;
+              this.phase = 'online_waiting';
+              this.applyRemoteTurnSync(syncMsg);
+              return;
+            }
+          } else {
             this._rollWind(true);
           }
 
@@ -3331,42 +3532,49 @@
           }
 
           if (this.phase === 'projectile') {
+            const FIXED_DT = 1 / 60;
+            this.physicsAccumulator += dt;
             const activeP = this.getActivePlayer();
             const windAccel = this.wind * 11.5 * (1 - (activeP?.kingdom.windResist || 0));
 
-            for (let i = this.projectiles.length - 1; i >= 0; i--) {
-              const pr = this.projectiles[i];
-              pr.vx += windAccel * dt;
-              pr.vy += 460 * dt;
-              pr.x += pr.vx * dt;
-              pr.y += pr.vy * dt;
+            while (this.physicsAccumulator >= FIXED_DT && this.projectiles.length > 0 && !this.gameOver) {
+              this.physicsAccumulator -= FIXED_DT;
 
-              pr.trail.push({ x: pr.x, y: pr.y });
-              if (pr.trail.length > 18) pr.trail.shift();
+              for (let i = this.projectiles.length - 1; i >= 0; i--) {
+                const pr = this.projectiles[i];
+                pr.vx += windAccel * FIXED_DT;
+                pr.vy += 460 * FIXED_DT;
+                pr.x += pr.vx * FIXED_DT;
+                pr.y += pr.vy * FIXED_DT;
 
-              const enemySide = pr.side === 0 ? 1 : 0;
-              let hitBlock = false;
-              for (const blk of this.blocks) {
-                if (blk.side !== enemySide || blk.hp <= 0) continue;
-                if (
-                  pr.x + pr.radius >= blk.x &&
-                  pr.x - pr.radius <= blk.x + blk.w &&
-                  pr.y + pr.radius >= blk.y &&
-                  pr.y - pr.radius <= blk.y + blk.h
-                ) {
-                  hitBlock = true;
-                  break;
+                pr.trail.push({ x: pr.x, y: pr.y });
+                if (pr.trail.length > 18) pr.trail.shift();
+
+                const enemySide = pr.side === 0 ? 1 : 0;
+                let hitBlock = false;
+                for (const blk of this.blocks) {
+                  if (blk.side !== enemySide || blk.hp <= 0) continue;
+                  if (
+                    pr.x + pr.radius >= blk.x &&
+                    pr.x - pr.radius <= blk.x + blk.w &&
+                    pr.y + pr.radius >= blk.y &&
+                    pr.y - pr.radius <= blk.y + blk.h
+                  ) {
+                    hitBlock = true;
+                    break;
+                  }
                 }
-              }
 
-              if (hitBlock || pr.y >= this.groundY || pr.x < -120 || pr.x > this.W + 120) {
-                if (pr.y >= this.groundY) pr.y = this.groundY;
-                this._detonateProjectile(pr);
-                this.projectiles.splice(i, 1);
+                if (hitBlock || pr.y >= this.groundY || pr.x < -120 || pr.x > this.W + 120) {
+                  if (pr.y >= this.groundY) pr.y = this.groundY;
+                  this._detonateProjectile(pr);
+                  this.projectiles.splice(i, 1);
+                }
               }
             }
 
             if (this.projectiles.length === 0 && !this.gameOver) {
+              this.physicsAccumulator = 0;
               this._advanceTurn();
             }
           }
@@ -5391,6 +5599,16 @@
         const btnPrimary = document.getElementById('btnResultPrimary');
         const btnSecondary = document.getElementById('btnResultSecondary');
         const btnUpgrades = document.getElementById('btnResultUpgrades');
+        const rematchStatusEl = document.getElementById('resultRematchStatus');
+
+        btnPrimary.disabled = false;
+        btnPrimary.classList.remove('opacity-60');
+        rematchStatusEl.classList.add('hidden');
+
+        if (engine.mode === 'online' && !onlineMgr.isDemo) {
+          onlineMgr.localWantsRematch = false;
+          onlineMgr.remoteWantsRematch = false;
+        }
 
         if (engine.mode === 'campaign') {
           btnUpgrades.classList.remove('hidden');
@@ -5437,11 +5655,68 @@
           document.getElementById('resultStars').textContent = didLocalWin ? '⭐⭐⭐' : '☆☆☆';
           document.getElementById('resultDesc').textContent = t('resultQuickDesc', winnerName);
           document.getElementById('resultRewardBox').textContent = t('resultRemainingHp', engine.players[winnerSide].hp);
-          btnPrimary.textContent = t('resultPlayAgain');
+          btnPrimary.textContent = (engine.mode === 'online' && !onlineMgr.isDemo)
+            ? t('rematchBtn')
+            : t('resultPlayAgain');
           btnSecondary.textContent = t('resultMainMenu');
         }
 
         document.getElementById('resultModal').classList.remove('hidden');
+      }
+
+      function startOnlineRematchWithSeed(newSeed) {
+        onlineMgr.seed = newSeed;
+        onlineMgr.localWantsRematch = false;
+        onlineMgr.remoteWantsRematch = false;
+        const btnPrimary = document.getElementById('btnResultPrimary');
+        btnPrimary.disabled = false;
+        btnPrimary.classList.remove('opacity-60');
+        document.getElementById('resultRematchStatus').classList.add('hidden');
+        showToast(t('rematchStartingToast'));
+        launchBattle({
+          mode: 'online',
+          p1Kingdom: onlineMgr.hostKingdom,
+          p2Kingdom: onlineMgr.guestKingdom,
+          seed: newSeed
+        });
+      }
+
+      function handleOnlineRematchSignal(msg) {
+        if (!msg) return;
+        const btnPrimary = document.getElementById('btnResultPrimary');
+        const rematchStatusEl = document.getElementById('resultRematchStatus');
+
+        if (msg.type === 'REMATCH_REQUEST') {
+          onlineMgr.remoteWantsRematch = true;
+          if (onlineMgr.localWantsRematch) {
+            const newSeed = Math.floor(Math.random() * 900000) + 100000;
+            onlineMgr.postEvent({ type: 'REMATCH_START', seed: newSeed });
+            startOnlineRematchWithSeed(newSeed);
+          } else {
+            btnPrimary.disabled = false;
+            btnPrimary.classList.remove('opacity-60');
+            btnPrimary.textContent = t('rematchAcceptBtn');
+            rematchStatusEl.textContent = t('rematchIncomingBanner');
+            rematchStatusEl.classList.remove('hidden');
+            showToast(t('rematchIncomingBanner'));
+          }
+        } else if (msg.type === 'REMATCH_START') {
+          startOnlineRematchWithSeed(msg.seed || (Math.floor(Math.random() * 900000) + 100000));
+        } else if (msg.type === 'LEAVE_ROOM') {
+          rematchStatusEl.textContent = t('rematchOpponentLeft');
+          rematchStatusEl.classList.remove('hidden');
+          btnPrimary.disabled = true;
+          btnPrimary.classList.add('opacity-60');
+        }
+      }
+
+      function bindOnlineBattleHandlers() {
+        onlineMgr.onOpponentShot = (msg) => engine.fireCurrentShot(msg);
+        onlineMgr.onRemoteAction = (msg) => engine.applyRemoteAction(msg);
+        onlineMgr.onTurnSync = (msg) => engine.applyRemoteTurnSync(msg);
+        onlineMgr.onMatchOver = (msg) => engine.applyRemoteMatchOver(msg);
+        onlineMgr.onRematchSignal = (msg) => handleOnlineRematchSignal(msg);
+        onlineMgr.onChatMessage = (msg) => appendChatBubble(msg.sender, msg.text, false);
       }
 
       /* -----------------------------------------------------------------------
@@ -5561,8 +5836,7 @@
           showToast(t('toastRoomReady', code));
 
           onlineMgr.onOpponentJoined = (guestKingdom) => {
-            onlineMgr.onOpponentShot = (msg) => engine.fireCurrentShot(msg);
-            onlineMgr.onChatMessage = (msg) => appendChatBubble(msg.sender, msg.text, false);
+            bindOnlineBattleHandlers();
             showToast(t('toastOpponentJoined', getKName(KINGDOMS[guestKingdom] || KINGDOMS.bizans)));
             launchBattle({
               mode: 'online',
@@ -5598,8 +5872,7 @@
         btn.textContent = t('onlineJoiningBtn');
         try {
           const info = await onlineMgr.joinRoom(code, selectedPlayerKingdom);
-          onlineMgr.onOpponentShot = (msg) => engine.fireCurrentShot(msg);
-          onlineMgr.onChatMessage = (msg) => appendChatBubble(msg.sender, msg.text, false);
+          bindOnlineBattleHandlers();
           showToast(t('toastJoinedRoom'));
           launchBattle({
             mode: 'online',
@@ -5683,39 +5956,40 @@
       });
 
       // Pause & Result Modal Controls
-      document.getElementById('btnOpenPauseMenu').addEventListener('click', () => {
-        engine.paused = true;
-        document.getElementById('pauseModal').classList.remove('hidden');
+      document.getElementById('btnResultSecondary').addEventListener('click', () => {
+        if (engine.mode === 'online' && !onlineMgr.isDemo) {
+          onlineMgr.postEvent({ type: 'LEAVE_ROOM' });
+        }
+        returnToMainMenu();
       });
-      document.getElementById('btnResumeGame').addEventListener('click', () => {
-        engine.paused = false;
-        document.getElementById('pauseModal').classList.add('hidden');
-      });
-      document.getElementById('btnRestartBattle').addEventListener('click', () => {
-        document.getElementById('pauseModal').classList.add('hidden');
-        engine.startMatch({
-          mode: engine.mode,
-          chapterId: engine.chapterId,
-          p1Kingdom: engine.players[0].kingdom.id,
-          p2Kingdom: engine.players[1].kingdom.id,
-          aiDifficulty: engine.aiDifficulty,
-          windMode: engine.windMode,
-          windSurprise: engine.windSurprise,
-          castleLayout: engine.castleLayout,
-          skyTheme: engine.skyTheme
-        });
-      });
-      document.getElementById('btnOpenGuideFromPause').addEventListener('click', () => {
-        document.getElementById('objectiveModal').classList.remove('hidden');
-      });
-      document.getElementById('btnExitToMainMenu').addEventListener('click', returnToMainMenu);
-
-      document.getElementById('btnResultSecondary').addEventListener('click', returnToMainMenu);
       document.getElementById('btnResultUpgrades').addEventListener('click', () => {
         returnToMainMenu();
         openCampaignModal(true);
       });
       document.getElementById('btnResultPrimary').addEventListener('click', () => {
+        if (engine.mode === 'online' && !onlineMgr.isDemo) {
+          const btnPrimary = document.getElementById('btnResultPrimary');
+          const rematchStatusEl = document.getElementById('resultRematchStatus');
+
+          if (onlineMgr.remoteWantsRematch) {
+            const newSeed = Math.floor(Math.random() * 900000) + 100000;
+            onlineMgr.postEvent({ type: 'REMATCH_START', seed: newSeed });
+            startOnlineRematchWithSeed(newSeed);
+            return;
+          }
+
+          if (!onlineMgr.localWantsRematch) {
+            onlineMgr.localWantsRematch = true;
+            onlineMgr.postEvent({ type: 'REMATCH_REQUEST' });
+            btnPrimary.disabled = true;
+            btnPrimary.classList.add('opacity-60');
+            btnPrimary.textContent = t('rematchWaiting');
+            rematchStatusEl.textContent = t('rematchSentBanner');
+            rematchStatusEl.classList.remove('hidden');
+          }
+          return;
+        }
+
         document.getElementById('resultModal').classList.add('hidden');
         if (engine.mode === 'campaign') {
           const ch = CHAPTERS.find(c => c.id === selectedChapterId) || CHAPTERS[0];
